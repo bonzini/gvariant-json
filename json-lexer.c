@@ -2,21 +2,19 @@
  * JSON lexer
  *
  * Copyright IBM, Corp. 2009
+ * Copyright Red Hat, Inc. 2011
  *
  * Authors:
  *  Anthony Liguori   <aliguori@us.ibm.com>
+ *  Paolo Bonzini     <pbonzini@redhat.com>
  *
  * This work is licensed under the terms of the GNU LGPL, version 2.1 or later.
  * See the COPYING.LIB file in the top-level directory.
  *
  */
 
-#include <errno.h>
-#include "qstring.h"
-#include "qlist.h"
-#include "qdict.h"
-#include "qint.h"
 #include "json-lexer.h"
+#include <stdint.h>
 
 /*
  * \"([^\\\"]|(\\\"\\'\\\\\\/\\b\\f\\n\\r\\t\\u[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]))*\"
@@ -268,7 +266,7 @@ void json_lexer_init(JSONLexer *lexer, JSONLexerEmitter func)
 {
     lexer->emit = func;
     lexer->state = IN_START;
-    lexer->token = qstring_new();
+    lexer->token = g_string_sized_new (3);
     lexer->x = lexer->y = 0;
 }
 
@@ -286,7 +284,7 @@ static int json_lexer_feed_char(JSONLexer *lexer, char ch)
         new_state = json_lexer[lexer->state][(uint8_t)ch];
         char_consumed = !TERMINAL_NEEDED_LOOKAHEAD(lexer->state, new_state);
         if (char_consumed) {
-            qstring_append_chr(lexer->token, ch);
+            g_string_append_c(lexer->token, ch);
         }
 
         switch (new_state) {
@@ -298,8 +296,7 @@ static int json_lexer_feed_char(JSONLexer *lexer, char ch)
         case JSON_STRING:
             lexer->emit(lexer, lexer->token, new_state, lexer->x, lexer->y);
         case JSON_SKIP:
-            QDECREF(lexer->token);
-            lexer->token = qstring_new();
+            g_string_truncate(lexer->token, 0);
             new_state = IN_START;
             break;
         case ERROR:
@@ -335,5 +332,5 @@ int json_lexer_flush(JSONLexer *lexer)
 
 void json_lexer_destroy(JSONLexer *lexer)
 {
-    QDECREF(lexer->token);
+    g_string_free (lexer->token, TRUE);
 }

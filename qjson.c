@@ -11,6 +11,7 @@
  *
  */
 
+#include <glib.h>
 #include <inttypes.h>
 #include <string.h>
 #include "json-lexer.h"
@@ -30,7 +31,7 @@ typedef struct JSONParsingState
     QObject *result;
 } JSONParsingState;
 
-static void parse_json(JSONMessageParser *parser, QList *tokens)
+static void parse_json(JSONMessageParser *parser, GQueue *tokens)
 {
     JSONParsingState *s = container_of(parser, JSONParsingState, parser);
     s->result = json_parser_parse(tokens, s->ap);
@@ -131,7 +132,7 @@ static void to_json(const QObject *obj, QString *str, int pretty, int indent)
         QInt *val = qobject_to_qint(obj);
         char buffer[1024];
 
-        snprintf(buffer, sizeof(buffer), "%" PRId64, qint_get_int(val));
+        g_snprintf(buffer, sizeof(buffer), "%" PRId64, qint_get_int(val));
         qstring_append(str, buffer);
         break;
     }
@@ -152,7 +153,7 @@ static void to_json(const QObject *obj, QString *str, int pretty, int indent)
                 wchar |= (ptr[2] & 0x3F);
                 ptr += 2;
 
-                snprintf(escape, sizeof(escape), "\\u%04X", wchar);
+                g_snprintf(escape, sizeof(escape), "\\u%04X", wchar);
                 qstring_append(str, escape);
             } else if ((ptr[0] & 0xE0) == 0xC0 && (ptr[1] & 0x80)) {
                 uint16_t wchar;
@@ -162,7 +163,7 @@ static void to_json(const QObject *obj, QString *str, int pretty, int indent)
                 wchar |= (ptr[1] & 0x3F);
                 ptr++;
 
-                snprintf(escape, sizeof(escape), "\\u%04X", wchar);
+                g_snprintf(escape, sizeof(escape), "\\u%04X", wchar);
                 qstring_append(str, escape);
             } else switch (ptr[0]) {
                 case '\"':
@@ -189,7 +190,7 @@ static void to_json(const QObject *obj, QString *str, int pretty, int indent)
                 default: {
                     if (ptr[0] <= 0x1F) {
                         char escape[7];
-                        snprintf(escape, sizeof(escape), "\\u%04X", ptr[0]);
+                        g_snprintf(escape, sizeof(escape), "\\u%04X", ptr[0]);
                         qstring_append(str, escape);
                     } else {
                         char buf[2] = { ptr[0], 0 };
@@ -246,7 +247,7 @@ static void to_json(const QObject *obj, QString *str, int pretty, int indent)
         char buffer[1024];
         int len;
 
-        len = snprintf(buffer, sizeof(buffer), "%f", qfloat_get_double(val));
+        len = g_snprintf(buffer, sizeof(buffer), "%f", qfloat_get_double(val));
         while (len > 0 && buffer[len - 1] == '0') {
             len--;
         }

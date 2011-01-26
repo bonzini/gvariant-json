@@ -2,9 +2,11 @@
  * JSON lexer
  *
  * Copyright IBM, Corp. 2009
+ * Copyright Red Hat, Inc. 2011
  *
  * Authors:
  *  Anthony Liguori   <aliguori@us.ibm.com>
+ *  Paolo Bonizni     <pbonzini@redhat.com>
  *
  * This work is licensed under the terms of the GNU LGPL, version 2.1 or later.
  * See the COPYING.LIB file in the top-level directory.
@@ -14,8 +16,9 @@
 #ifndef QEMU_JSON_LEXER_H
 #define QEMU_JSON_LEXER_H
 
-#include "qstring.h"
-#include "qlist.h"
+#include <glib.h>
+#include <errno.h>
+#include <stddef.h>
 
 typedef enum json_token_type {
     JSON_OPERATOR = 100,
@@ -27,15 +30,23 @@ typedef enum json_token_type {
     JSON_SKIP,
 } JSONTokenType;
 
+typedef struct JSONToken
+{
+    int type;
+    char *str;
+    int x;
+    int y;
+} JSONToken;
+
 typedef struct JSONLexer JSONLexer;
 
-typedef void (JSONLexerEmitter)(JSONLexer *, QString *, JSONTokenType, int x, int y);
+typedef void (JSONLexerEmitter)(JSONLexer *, GString *, JSONTokenType, int x, int y);
 
 struct JSONLexer
 {
     JSONLexerEmitter *emit;
     int state;
-    QString *token;
+    GString *token;
     int x, y;
 };
 
