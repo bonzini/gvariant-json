@@ -11,7 +11,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "qdict.h"
+#include "gvariant-utils.h"
 
 #if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION <= 26
 gboolean

@@ -1,22 +1,35 @@
 /*
- * QDict Module
+ * GVariant utilities
  *
- * Copyright (C) 2009 Red Hat Inc.
+ * Based on the earlier QObject API
+ *
+ * Copyright (C) 2011 Red Hat, Inc.
  *
  * Authors:
- *  Luiz Capitulino <lcapitulino@redhat.com>
+ *  Paolo Bonzini <pbonzini@redhat.com>
  *
  * This work is licensed under the terms of the GNU LGPL, version 2.1 or later.
  * See the COPYING.LIB file in the top-level directory.
  */
+#ifndef GVARIANT_UTILS_H
+#define GVARIANT_UTILS_H
 
-#ifndef QDICT_H
-#define QDICT_H
-
-#include "qobject.h"
-#include "qlist.h"
+#include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <assert.h>
+#include <glib.h>
+
+static inline void g_variant_array_iterate(GVariant *array,
+                 void (*iter)(GVariant *obj, void *opaque), void *opaque)
+{
+    GVariant *var;
+    GVariantIter _iter;
+
+    g_variant_iter_init(&_iter, array);
+    while (g_variant_iter_loop (&_iter, "v", &var))
+      iter (var, opaque);
+}
 
 #if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION <= 26
 extern
@@ -33,10 +46,6 @@ g_variant_lookup_value (GVariant           *dictionary,
                         const GVariantType *expected_type);
 #endif
 
-/* Object API */
-#define g_variant_do_lookup(dict, key, type, c_type) ({ \
-  c_type _val = (c_type) 0; g_variant_lookup(dict, key, type, &_val); _val; })
-
 static inline bool g_variant_has_key(GVariant *dict, const char *key)
 {
     GVariant *value;
@@ -46,6 +55,8 @@ static inline bool g_variant_has_key(GVariant *dict, const char *key)
     return value != NULL;
 }
 
+#define g_variant_do_lookup(dict, key, type, c_type) ({ \
+  c_type _val = (c_type) 0; g_variant_lookup(dict, key, type, &_val); _val; })
 #define g_variant_lookup_boolean(dict, key) \
         g_variant_do_lookup(dict, key, "b", bool)
 #define g_variant_lookup_array(dict, key) \
@@ -120,4 +131,4 @@ const char *g_variant_lookup_string(GVariant *dict, const char *key)
     return result;
 }
 
-#endif /* QDICT_H */
+#endif /* GVARIANT_UTILS_H */

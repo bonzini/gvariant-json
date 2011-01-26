@@ -15,7 +15,7 @@
 #define QJSON_H
 
 #include <stdarg.h>
-#include "qobject.h"
+#include "gvariant-utils.h"
 
 #define GCC_FMT_ATTR(a,b)
 GVariant *g_variant_from_json(const char *string) GCC_FMT_ATTR(1, 0);

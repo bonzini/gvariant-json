@@ -13,9 +13,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#include "qobject.h"
-#include "qdict.h"
-#include "qlist.h"
+#include "gvariant-utils.h"
 #include "gvariant-json.h"
 
 START_TEST(escaped_string)

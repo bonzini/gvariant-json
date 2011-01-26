@@ -18,9 +18,7 @@
 #include "json-parser.h"
 #include "json-streamer.h"
 #include "gvariant-json.h"
-#include "qobject.h"
-#include "qlist.h"
-#include "qdict.h"
+#include "gvariant-utils.h"
 
 typedef struct JSONParsingState
 {
