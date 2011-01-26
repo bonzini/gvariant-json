@@ -165,7 +165,8 @@ static int hex2decimal(char ch)
 static QString *qstring_from_escaped_str(JSONParserContext *ctxt, JSONToken *token)
 {
     const char *ptr = token->str;
-    QString *str;
+    QString *qstr = NULL;
+    GString *str;
     int double_quote = 1;
 
     if (*ptr == '"') {
@@ -175,7 +176,7 @@ static QString *qstring_from_escaped_str(JSONParserContext *ctxt, JSONToken *tok
     }
     ptr++;
 
-    str = qstring_new();
+    str = g_string_sized_new(10);
     while (*ptr && 
            ((double_quote && *ptr != '"') || (!double_quote && *ptr != '\''))) {
         if (*ptr == '\\') {
@@ -183,39 +184,39 @@ static QString *qstring_from_escaped_str(JSONParserContext *ctxt, JSONToken *tok
 
             switch (*ptr) {
             case '"':
-                qstring_append(str, "\"");
+                g_string_append_c(str, '"');
                 ptr++;
                 break;
             case '\'':
-                qstring_append(str, "'");
+                g_string_append_c(str, '\'');
                 ptr++;
                 break;
             case '\\':
-                qstring_append(str, "\\");
+                g_string_append_c(str, '\\');
                 ptr++;
                 break;
             case '/':
-                qstring_append(str, "/");
+                g_string_append_c(str, '/');
                 ptr++;
                 break;
             case 'b':
-                qstring_append(str, "\b");
+                g_string_append_c(str, '\b');
                 ptr++;
                 break;
             case 'f':
-                qstring_append(str, "\f");
+                g_string_append_c(str, '\f');
                 ptr++;
                 break;
             case 'n':
-                qstring_append(str, "\n");
+                g_string_append_c(str, '\n');
                 ptr++;
                 break;
             case 'r':
-                qstring_append(str, "\r");
+                g_string_append_c(str, '\r');
                 ptr++;
                 break;
             case 't':
-                qstring_append(str, "\t");
+                g_string_append_c(str, '\t');
                 ptr++;
                 break;
             case 'u': {
@@ -238,27 +239,22 @@ static QString *qstring_from_escaped_str(JSONParserContext *ctxt, JSONToken *tok
                 }
 
                 wchar_to_utf8(unicode_char, utf8_char, sizeof(utf8_char));
-                qstring_append(str, utf8_char);
+                g_string_append(str, utf8_char);
             }   break;
             default:
                 parse_error(ctxt, token, "invalid escape sequence in string");
                 goto out;
             }
         } else {
-            char dummy[2];
-
-            dummy[0] = *ptr++;
-            dummy[1] = 0;
-
-            qstring_append(str, dummy);
+            g_string_append_c(str, *ptr++);
         }
     }
 
-    return str;
+    qstr = qstring_from_str (str->str);
 
 out:
-    QDECREF(str);
-    return NULL;
+    g_string_free(str, TRUE);
+    return qstr;
 }
 
 /**
