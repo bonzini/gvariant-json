@@ -48,7 +48,6 @@ START_TEST(escaped_string)
 
     for (i = 0; test_cases[i].encoded; i++) {
         QObject *obj;
-        QString *qstr;
         char *str;
 
         obj = qobject_from_json(test_cases[i].encoded);
@@ -56,9 +55,8 @@ START_TEST(escaped_string)
         fail_unless(obj != NULL);
         fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_STRING));
         
-        qstr = qobject_to_qstring(obj);
-        fail_unless(strcmp(qstring_get_str(qstr), test_cases[i].decoded) == 0,
-                    "%s != %s\n", qstring_get_str(qstr), test_cases[i].decoded);
+        fail_unless(strcmp(qstring_get_str(obj), test_cases[i].decoded) == 0,
+                    "%s != %s\n", qstring_get_str(obj), test_cases[i].decoded);
 
         if (test_cases[i].skip == 0) {
             str = qobject_to_json(obj);
@@ -87,7 +85,6 @@ START_TEST(simple_string)
 
     for (i = 0; test_cases[i].encoded; i++) {
         QObject *obj;
-        QString *qstr;
         char *str;
 
         obj = qobject_from_json(test_cases[i].encoded);
@@ -95,8 +92,7 @@ START_TEST(simple_string)
         fail_unless(obj != NULL);
         fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_STRING));
         
-        qstr = qobject_to_qstring(obj);
-        fail_unless(strcmp(qstring_get_str(qstr), test_cases[i].decoded) == 0);
+        fail_unless(strcmp(qstring_get_str(obj), test_cases[i].decoded) == 0);
 
         str = qobject_to_json(obj);
         fail_unless(strcmp(str, test_cases[i].encoded) == 0);
@@ -123,17 +119,15 @@ START_TEST(single_quote_string)
 
     for (i = 0; test_cases[i].encoded; i++) {
         QObject *obj;
-        QString *qstr;
 
         obj = qobject_from_json(test_cases[i].encoded);
 
         fail_unless(obj != NULL);
         fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_STRING));
         
-        qstr = qobject_to_qstring(obj);
-        fail_unless(strcmp(qstring_get_str(qstr), test_cases[i].decoded) == 0);
+        fail_unless(strcmp(qstring_get_str(obj), test_cases[i].decoded) == 0);
 
-        QDECREF(qstr);
+        qobject_decref(obj);
     }
 }
 END_TEST
@@ -151,17 +145,15 @@ START_TEST(vararg_string)
 
     for (i = 0; test_cases[i].decoded; i++) {
         QObject *obj;
-        QString *qstr;
 
         obj = qobject_from_jsonf("%s", test_cases[i].decoded);
 
         fail_unless(obj != NULL);
         fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_STRING));
         
-        qstr = qobject_to_qstring(obj);
-        fail_unless(strcmp(qstring_get_str(qstr), test_cases[i].decoded) == 0);
+        fail_unless(strcmp(qstring_get_str(obj), test_cases[i].decoded) == 0);
 
-        QDECREF(qstr);
+        qobject_decref(obj);
     }
 }
 END_TEST
@@ -184,14 +176,12 @@ START_TEST(simple_number)
 
     for (i = 0; test_cases[i].encoded; i++) {
         QObject *obj;
-        QInt *qint;
 
         obj = qobject_from_json(test_cases[i].encoded);
         fail_unless(obj != NULL);
         fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_INT64));
 
-        qint = qobject_to_qint(obj);
-        fail_unless(qint_get_int(qint) == test_cases[i].decoded);
+        fail_unless(qint_get_int(obj) == test_cases[i].decoded);
         if (test_cases[i].skip == 0) {
             char *str;
 
@@ -200,7 +190,7 @@ START_TEST(simple_number)
             free(str);
         }
 
-        QDECREF(qint);
+        qobject_decref(obj);
     }
 }
 END_TEST
@@ -222,14 +212,12 @@ START_TEST(float_number)
 
     for (i = 0; test_cases[i].encoded; i++) {
         QObject *obj;
-        QFloat *qfloat;
 
         obj = qobject_from_json(test_cases[i].encoded);
         fail_unless(obj != NULL);
         fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_DOUBLE));
 
-        qfloat = qobject_to_qfloat(obj);
-        fail_unless(qfloat_get_double(qfloat) == test_cases[i].decoded);
+        fail_unless(qfloat_get_double(obj) == test_cases[i].decoded);
 
         if (test_cases[i].skip == 0) {
             char *str;
@@ -239,7 +227,7 @@ START_TEST(float_number)
             free(str);
         }
 
-        QDECREF(qfloat);
+        qobject_decref(obj);
     }
 }
 END_TEST
@@ -247,8 +235,6 @@ END_TEST
 START_TEST(vararg_number)
 {
     QObject *obj;
-    QInt *qint;
-    QFloat *qfloat;
     int value = 0x2342;
     int64_t value64 = 0x2342342343LL;
     double valuef = 2.323423423;
@@ -257,80 +243,72 @@ START_TEST(vararg_number)
     fail_unless(obj != NULL);
     fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_INT64));
 
-    qint = qobject_to_qint(obj);
-    fail_unless(qint_get_int(qint) == value);
+    fail_unless(qint_get_int(obj) == value);
 
-    QDECREF(qint);
+    qobject_decref(obj);
 
     obj = qobject_from_jsonf("%" PRId64, value64);
     fail_unless(obj != NULL);
     fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_INT64));
 
-    qint = qobject_to_qint(obj);
-    fail_unless(qint_get_int(qint) == value64);
+    fail_unless(qint_get_int(obj) == value64);
 
-    QDECREF(qint);
+    qobject_decref(obj);
 
     obj = qobject_from_jsonf("%f", valuef);
     fail_unless(obj != NULL);
     fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_DOUBLE));
 
-    qfloat = qobject_to_qfloat(obj);
-    fail_unless(qfloat_get_double(qfloat) == valuef);
+    fail_unless(qfloat_get_double(obj) == valuef);
 
-    QDECREF(qfloat);
+    qobject_decref(obj);
 }
 END_TEST
 
 START_TEST(keyword_literal)
 {
     QObject *obj;
-    QBool *qbool;
     char *str;
 
     obj = qobject_from_json("true");
     fail_unless(obj != NULL);
     fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_BOOLEAN));
 
-    qbool = qobject_to_qbool(obj);
-    fail_unless(qbool_get_int(qbool) != 0);
+    fail_unless(qbool_get_int(obj) != 0);
 
     str = qobject_to_json(obj);
     fail_unless(strcmp(str, "true") == 0);
     free(str);
 
-    QDECREF(qbool);
+    qobject_decref(obj);
 
     obj = qobject_from_json("false");
     fail_unless(obj != NULL);
     fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_BOOLEAN));
 
-    qbool = qobject_to_qbool(obj);
-    fail_unless(qbool_get_int(qbool) == 0);
+    fail_unless(qbool_get_int(obj) == 0);
 
     str = qobject_to_json(obj);
     fail_unless(strcmp(str, "false") == 0);
     free(str);
 
-    QDECREF(qbool);
+    qobject_decref(obj);
 
     obj = qobject_from_jsonf("%i", false);
     fail_unless(obj != NULL);
     fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_BOOLEAN));
 
-    qbool = qobject_to_qbool(obj);
-    fail_unless(qbool_get_int(qbool) == 0);
+    fail_unless(qbool_get_int(obj) == 0);
 
-    QDECREF(qbool);
+    qobject_decref(obj);
     
     obj = qobject_from_jsonf("%i", true);
     fail_unless(obj != NULL);
     fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_BOOLEAN));
 
-    qbool = qobject_to_qbool(obj);
-    fail_unless(qbool_get_int(qbool) != 0);
+    fail_unless(qbool_get_int(obj) != 0);
 
-    QDECREF(qbool);
+    qobject_decref(obj);
 }
 END_TEST
 
@@ -406,14 +384,14 @@ static int compare_litqobj_to_qobj(LiteralQObject *lhs, QObject *rhs)
 
     switch (lhs->type) {
     case QTYPE_QINT:
-        return lhs->value.qint == qint_get_int(qobject_to_qint(rhs));
+        return lhs->value.qint == qint_get_int(rhs);
     case QTYPE_QSTRING:
-        return (strcmp(lhs->value.qstr, qstring_get_str(qobject_to_qstring(rhs))) == 0);
+        return (strcmp(lhs->value.qstr, qstring_get_str(rhs)) == 0);
     case QTYPE_QDICT: {
         int i;
 
         for (i = 0; lhs->value.qdict[i].key; i++) {
-            QObject *obj = qdict_get(qobject_to_qdict(rhs), lhs->value.qdict[i].key);
+            QObject *obj = qdict_get(rhs, lhs->value.qdict[i].key);
 
             if (!compare_litqobj_to_qobj(&lhs->value.qdict[i].value, obj)) {
 	        qobject_decref (obj);
@@ -431,7 +409,7 @@ static int compare_litqobj_to_qobj(LiteralQObject *lhs, QObject *rhs)
         helper.objs = lhs->value.qlist;
         helper.result = 1;
         
-        qlist_iter(qobject_to_qlist(rhs), compare_helper, &helper);
+        qlist_iter(rhs, compare_helper, &helper);
 
         return helper.result;
     }

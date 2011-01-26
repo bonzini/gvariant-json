@@ -17,10 +17,7 @@
 #include <stdint.h>
 #include "qobject.h"
 
-typedef GVariant QBool;
-
 #define qbool_from_int(x)	g_variant_new_boolean(x)
 #define qbool_get_int(x)	g_variant_get_boolean(x)
-#define qobject_to_qbool(x)	(g_variant_get_boolean(x), (x))
 
 #endif /* QBOOL_H */

@@ -33,19 +33,14 @@ g_variant_lookup_value (GVariant           *dictionary,
                         const GVariantType *expected_type);
 #endif
 
-typedef GVariant QDictEntry;
-typedef GVariant QDict;
-
 /* Object API */
 #define qdict_size(qdict) \
         g_variant_get_n_children(qdict)
-#define qobject_to_qdict(obj) \
-        (obj)
 
 #define qdict_do_variant_lookup(qdict, key, type, c_type) ({ \
   c_type _val = (c_type) 0; g_variant_lookup(qdict, key, type, &_val); _val; })
 
-static inline bool qdict_haskey(QDict *qdict, const char *key)
+static inline bool qdict_haskey(GVariant *qdict, const char *key)
 {
     GVariant *value;
     value = g_variant_lookup_value(qdict, key, NULL);
@@ -68,7 +63,7 @@ static inline bool qdict_haskey(QDict *qdict, const char *key)
 #define qdict_get(qdict, key) \
         g_variant_lookup_value(qdict, key, NULL)
 
-static inline void qdict_iter(QDict *qdict,
+static inline void qdict_iter(GVariant *qdict,
                  void (*iter)(const char *key, QObject *value, void *opaque),
                  void *opaque)
 {
@@ -82,7 +77,7 @@ static inline void qdict_iter(QDict *qdict,
 }
 
 /* High level helpers */
-static inline double qdict_get_double(QDict *qdict, const char *key)
+static inline double qdict_get_double(GVariant *qdict, const char *key)
 {
     GVariant *value = g_variant_lookup_value (qdict, key, NULL);
     double result;
@@ -94,7 +89,7 @@ static inline double qdict_get_double(QDict *qdict, const char *key)
     return result;
 }
 
-static inline int64_t qdict_get_try_int(QDict *qdict, const char *key,
+static inline int64_t qdict_get_try_int(GVariant *qdict, const char *key,
                                         int64_t def_value)
 {
     GVariant *value = g_variant_lookup_value (qdict, key, NULL);
@@ -108,7 +103,7 @@ static inline int64_t qdict_get_try_int(QDict *qdict, const char *key,
     return def_value;
 }
 
-static inline int qdict_get_try_bool(QDict *qdict, const char *key, int def_value)
+static inline int qdict_get_try_bool(GVariant *qdict, const char *key, int def_value)
 {
     GVariant *value = g_variant_lookup_value (qdict, key, NULL);
     int result;
@@ -122,7 +117,7 @@ static inline int qdict_get_try_bool(QDict *qdict, const char *key, int def_valu
 }
 
 static inline
-const char *qdict_get_try_str(QDict *qdict, const char *key)
+const char *qdict_get_try_str(GVariant *qdict, const char *key)
 {
     GVariant *value = g_variant_lookup_value (qdict, key, NULL);
     const char *result;

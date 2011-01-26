@@ -15,13 +15,9 @@
 
 #include "qobject.h"
 
-typedef GVariant QList;
-typedef GVariant QListEntry;
-
 #define qlist_empty(qlist)	(g_variant_n_children(qlist) == 0)
-#define qobject_to_qlist(qlist) (qlist)
 
-static inline void qlist_iter(QList *qlist,
+static inline void qlist_iter(QObject *qlist,
                  void (*iter)(QObject *obj, void *opaque), void *opaque)
 {
     GVariant *var;

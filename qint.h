@@ -16,10 +16,7 @@
 #include <stdint.h>
 #include "qobject.h"
 
-typedef GVariant QInt;
-
 #define qint_from_int(x)	g_variant_new_int64(x)
 #define qint_get_int(x)		g_variant_get_int64(x)
-#define qobject_to_qint(x)	(g_variant_get_int64(x), (x))
 
 #endif /* QINT_H */

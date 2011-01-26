@@ -86,7 +86,7 @@ static void to_json(QObject *obj, GString *str, int pretty, int indent);
 static void to_json_dict_iter(const char *key, QObject *obj, void *opaque)
 {
     ToJsonIterState *s = opaque;
-    QString *qkey;
+    QObject *qkey;
     int j;
 
     if (s->count)
@@ -99,8 +99,8 @@ static void to_json_dict_iter(const char *key, QObject *obj, void *opaque)
     }
 
     qkey = qstring_from_str(key);
-    to_json(QOBJECT(qkey), s->str, s->pretty, s->indent);
-    QDECREF(qkey);
+    to_json(qkey, s->str, s->pretty, s->indent);
+    qobject_decref(qkey);
 
     g_string_append(s->str, ": ");
     to_json(obj, s->str, s->pretty, s->indent);
@@ -128,14 +128,12 @@ static void to_json_list_iter(QObject *obj, void *opaque)
 static void to_json(QObject *obj, GString *str, int pretty, int indent)
 {
     if (g_variant_is_of_type (obj, G_VARIANT_TYPE_INT64)) {
-        QInt *val = qobject_to_qint(obj);
-        g_string_append_printf(str, "%" PRId64, qint_get_int(val));
+        g_string_append_printf(str, "%" PRId64, qint_get_int(obj));
     }
     else if (g_variant_is_of_type (obj, G_VARIANT_TYPE_STRING)) {
-        QString *val = qobject_to_qstring(obj);
         const char *ptr;
 
-        ptr = qstring_get_str(val);
+        ptr = qstring_get_str(obj);
         g_string_append_c(str, '\"');
         while (*ptr) {
             if ((ptr[0] & 0xE0) == 0xE0 &&
@@ -192,14 +190,13 @@ static void to_json(QObject *obj, GString *str, int pretty, int indent)
         g_string_append_c(str, '\"');
     } else if (g_variant_is_of_type (obj, G_VARIANT_TYPE_DICTIONARY)) {
         ToJsonIterState s;
-        QDict *val = qobject_to_qdict(obj);
 
         s.count = 0;
         s.str = str;
         s.indent = indent + 1;
         s.pretty = pretty;
         g_string_append(str, "{");
-        qdict_iter(val, to_json_dict_iter, &s);
+        qdict_iter(obj, to_json_dict_iter, &s);
         if (pretty) {
             int j;
             g_string_append_c(str, '\n');
@@ -209,14 +206,13 @@ static void to_json(QObject *obj, GString *str, int pretty, int indent)
         g_string_append(str, "}");
     } else if (g_variant_is_of_type (obj, G_VARIANT_TYPE_ARRAY)) {
         ToJsonIterState s;
-        QList *val = qobject_to_qlist(obj);
 
         s.count = 0;
         s.str = str;
         s.indent = indent + 1;
         s.pretty = pretty;
         g_string_append(str, "[");
-        qlist_iter(val, (void *)to_json_list_iter, &s);
+        qlist_iter(obj, (void *)to_json_list_iter, &s);
         if (pretty) {
             int j;
             g_string_append_c(str, '\n');
@@ -225,11 +221,10 @@ static void to_json(QObject *obj, GString *str, int pretty, int indent)
         }
         g_string_append(str, "]");
     } else if (g_variant_is_of_type (obj, G_VARIANT_TYPE_DOUBLE)) {
-        QFloat *val = qobject_to_qfloat(obj);
         char buffer[1024];
         int len;
 
-        len = g_snprintf(buffer, sizeof(buffer), "%f", qfloat_get_double(val));
+        len = g_snprintf(buffer, sizeof(buffer), "%f", qfloat_get_double(obj));
         while (len > 0 && buffer[len - 1] == '0') {
             len--;
         }
@@ -242,9 +237,8 @@ static void to_json(QObject *obj, GString *str, int pretty, int indent)
         
         g_string_append(str, buffer);
     } else if (g_variant_is_of_type (obj, G_VARIANT_TYPE_BOOLEAN)) {
-        QBool *val = qobject_to_qbool(obj);
 
-        if (qbool_get_int(val)) {
+        if (qbool_get_int(obj)) {
             g_string_append(str, "true");
         } else {
             g_string_append(str, "false");

@@ -162,10 +162,10 @@ static int hex2decimal(char ch)
  *      \t
  *      \u four-hex-digits 
  */
-static QString *qstring_from_escaped_str(JSONParserContext *ctxt, JSONToken *token)
+static QObject *qstring_from_escaped_str(JSONParserContext *ctxt, JSONToken *token)
 {
     const char *ptr = token->str;
-    QString *qstr = NULL;
+    QObject *qstr = NULL;
     GString *str;
     int double_quote = 1;
 
@@ -401,9 +401,9 @@ static QObject *parse_keyword(JSONParserContext *ctxt, GQueue *tokens)
     }
 
     if (token_is_keyword(token, "true")) {
-        ret = QOBJECT(qbool_from_int(TRUE));
+        ret = qbool_from_int(TRUE);
     } else if (token_is_keyword(token, "false")) {
-        ret = QOBJECT(qbool_from_int(FALSE));
+        ret = qbool_from_int(FALSE);
     } else {
         parse_error(ctxt, token, "invalid keyword `%s'", token->str);
         goto out;
@@ -429,18 +429,18 @@ static QObject *parse_escape(JSONParserContext *ctxt, GQueue *tokens, va_list *a
     if (token_is_escape(token, "%p")) {
         obj = va_arg(*ap, QObject *);
     } else if (token_is_escape(token, "%i")) {
-        obj = QOBJECT(qbool_from_int(va_arg(*ap, int)));
+        obj = qbool_from_int(va_arg(*ap, int));
     } else if (token_is_escape(token, "%d")) {
-        obj = QOBJECT(qint_from_int(va_arg(*ap, int)));
+        obj = qint_from_int(va_arg(*ap, int));
     } else if (token_is_escape(token, "%ld")) {
-        obj = QOBJECT(qint_from_int(va_arg(*ap, long)));
+        obj = qint_from_int(va_arg(*ap, long));
     } else if (token_is_escape(token, "%lld") ||
                token_is_escape(token, "%I64d")) {
-        obj = QOBJECT(qint_from_int(va_arg(*ap, long long)));
+        obj = qint_from_int(va_arg(*ap, long long));
     } else if (token_is_escape(token, "%s")) {
-        obj = QOBJECT(qstring_from_str(va_arg(*ap, const char *)));
+        obj = qstring_from_str(va_arg(*ap, const char *));
     } else if (token_is_escape(token, "%f")) {
-        obj = QOBJECT(qfloat_from_double(va_arg(*ap, double)));
+        obj = qfloat_from_double(va_arg(*ap, double));
     } else {
         goto out;
     }
@@ -460,14 +460,14 @@ static QObject *parse_literal(JSONParserContext *ctxt, GQueue *tokens)
     token = g_queue_peek_head(tokens);
     switch (token->type) {
     case JSON_STRING:
-        obj = QOBJECT(qstring_from_escaped_str(ctxt, token));
+        obj = qstring_from_escaped_str(ctxt, token);
         break;
     case JSON_INTEGER:
-        obj = QOBJECT(qint_from_int(strtoll(token->str, NULL, 10)));
+        obj = qint_from_int(strtoll(token->str, NULL, 10));
         break;
     case JSON_FLOAT:
         /* FIXME dependent on locale */
-        obj = QOBJECT(qfloat_from_double(strtod(token->str, NULL)));
+        obj = qfloat_from_double(strtod(token->str, NULL));
         break;
     default:
         goto out;
