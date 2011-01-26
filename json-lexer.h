@@ -20,6 +20,16 @@
 #include <errno.h>
 #include <stddef.h>
 
+#ifndef offsetof
+#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *) 0)->MEMBER)
+#endif
+
+#ifndef container_of
+#define container_of(ptr, type, member) ({                      \
+        const typeof(((type *) 0)->member) *__mptr = (ptr);     \
+        (type *) ((char *) __mptr - offsetof(type, member));})
+#endif
+
 typedef enum json_token_type {
     JSON_OPERATOR = 100,
     JSON_INTEGER,

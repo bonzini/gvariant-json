@@ -17,13 +17,10 @@
 #include <stdint.h>
 #include "qobject.h"
 
-typedef struct QFloat {
-    QObject_HEAD;
-    double value;
-} QFloat;
+typedef GVariant QFloat;
 
-QFloat *qfloat_from_double(double value);
-double qfloat_get_double(const QFloat *qi);
-QFloat *qobject_to_qfloat(const QObject *obj);
+#define qfloat_from_double(x)	g_variant_new_double(x)
+#define qfloat_get_double(x)	g_variant_get_double(x)
+#define qobject_to_qfloat(x)	(g_variant_get_double(x), (x))
 
 #endif /* QFLOAT_H */

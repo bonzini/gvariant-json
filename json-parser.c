@@ -260,13 +260,13 @@ out:
 /**
  * Parsing rules
  */
-static int parse_pair(JSONParserContext *ctxt, QDict *dict, GQueue *tokens, va_list *ap)
+static int parse_pair(JSONParserContext *ctxt, GVariantBuilder *builder, GQueue *tokens, va_list *ap)
 {
     QObject *key, *value;
     JSONToken *peek;
 
     key = parse_value(ctxt, tokens, ap);
-    if (!key || qobject_type(key) != QTYPE_QSTRING) {
+    if (!key || !g_variant_is_of_type(key, G_VARIANT_TYPE_STRING)) {
         parse_error(ctxt, peek, "key is not a string in object");
         goto out;
     }
@@ -285,31 +285,39 @@ static int parse_pair(JSONParserContext *ctxt, QDict *dict, GQueue *tokens, va_l
         goto out;
     }
 
-    qdict_put_obj(dict, qstring_get_str(qobject_to_qstring(key)), value);
-    qobject_decref(key);
+    g_variant_builder_add (builder, "{sv}",
+			   g_variant_get_string (key, NULL),
+			   value);
+    g_variant_unref (key);
     return 0;
 
 out:
-    qobject_decref(key);
+    if (key != NULL) {
+        g_variant_unref(key);
+    }
     return -1;
 }
 
 static QObject *parse_object(JSONParserContext *ctxt, GQueue *tokens, va_list *ap)
 {
-    QDict *dict = NULL;
+    static GVariantType *BOXED_DICTIONARY;
+    GVariantBuilder builder;
     JSONToken *peek;
 
     peek = g_queue_peek_head (tokens);
     if (!token_is_operator(peek, '{')) {
-        goto out;
+        goto out_not_object;
     }
 
     g_queue_pop_head (tokens);
     peek = g_queue_peek_head (tokens);
-    dict = qdict_new();
+    if (!BOXED_DICTIONARY) {
+        BOXED_DICTIONARY = g_variant_type_new ("a{sv}");
+    }
+    g_variant_builder_init (&builder, BOXED_DICTIONARY);
     if (!token_is_operator(peek, '}')) {
         for (;;) {
-            if (parse_pair(ctxt, dict, tokens, ap) == -1) {
+            if (parse_pair(ctxt, &builder, tokens, ap) == -1) {
                 goto out;
             }
 
@@ -327,26 +335,31 @@ static QObject *parse_object(JSONParserContext *ctxt, GQueue *tokens, va_list *a
     }
 
     g_queue_pop_head (tokens);
-    return QOBJECT(dict);
+    return g_variant_builder_end (&builder);
 
 out:
-    QDECREF(dict);
+    g_variant_builder_clear (&builder);
+out_not_object:
     return NULL;
 }
 
 static QObject *parse_array(JSONParserContext *ctxt, GQueue *tokens, va_list *ap)
 {
-    QList *list = NULL;
+    static GVariantType *BOXED_ARRAY;
+    GVariantBuilder builder;
     JSONToken *peek;
 
     peek = g_queue_peek_head (tokens);
     if (!token_is_operator(peek, '[')) {
-        goto out;
+        goto out_not_array;
     }
 
     g_queue_pop_head (tokens);
     peek = g_queue_peek_head (tokens);
-    list = qlist_new();
+    if (!BOXED_ARRAY) {
+        BOXED_ARRAY = g_variant_type_new ("av");
+    }
+    g_variant_builder_init (&builder, BOXED_ARRAY);
     if (!token_is_operator(peek, ']')) {
         for (;;) {
 	    QObject *obj = parse_value(ctxt, tokens, ap);
@@ -354,7 +367,7 @@ static QObject *parse_array(JSONParserContext *ctxt, GQueue *tokens, va_list *ap
                 goto out;
             }
 
-            qlist_append_obj(list, obj);
+            g_variant_builder_add_value (&builder, g_variant_new_variant (obj));
             peek = g_queue_peek_head (tokens);
             if (token_is_operator(peek, ']')) {
                 break;
@@ -369,10 +382,11 @@ static QObject *parse_array(JSONParserContext *ctxt, GQueue *tokens, va_list *ap
     }
 
     g_queue_pop_head (tokens);
-    return QOBJECT(list);
+    return g_variant_builder_end(&builder);
 
 out:
-    QDECREF(list);
+    g_variant_builder_clear(&builder);
+out_not_array:
     return NULL;
 }
 

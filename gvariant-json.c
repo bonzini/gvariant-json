@@ -17,7 +17,7 @@
 #include "json-lexer.h"
 #include "json-parser.h"
 #include "json-streamer.h"
-#include "qjson.h"
+#include "gvariant-json.h"
 #include "qint.h"
 #include "qlist.h"
 #include "qbool.h"
@@ -81,7 +81,7 @@ typedef struct ToJsonIterState
     GString *str;
 } ToJsonIterState;
 
-static void to_json(const QObject *obj, GString *str, int pretty, int indent);
+static void to_json(QObject *obj, GString *str, int pretty, int indent);
 
 static void to_json_dict_iter(const char *key, QObject *obj, void *opaque)
 {
@@ -125,15 +125,13 @@ static void to_json_list_iter(QObject *obj, void *opaque)
     s->count++;
 }
 
-static void to_json(const QObject *obj, GString *str, int pretty, int indent)
+static void to_json(QObject *obj, GString *str, int pretty, int indent)
 {
-    switch (qobject_type(obj)) {
-    case QTYPE_QINT: {
+    if (g_variant_is_of_type (obj, G_VARIANT_TYPE_INT64)) {
         QInt *val = qobject_to_qint(obj);
         g_string_append_printf(str, "%" PRId64, qint_get_int(val));
-        break;
     }
-    case QTYPE_QSTRING: {
+    else if (g_variant_is_of_type (obj, G_VARIANT_TYPE_STRING)) {
         QString *val = qobject_to_qstring(obj);
         const char *ptr;
 
@@ -192,9 +190,7 @@ static void to_json(const QObject *obj, GString *str, int pretty, int indent)
             ptr++;
         }
         g_string_append_c(str, '\"');
-        break;
-    }
-    case QTYPE_QDICT: {
+    } else if (g_variant_is_of_type (obj, G_VARIANT_TYPE_DICTIONARY)) {
         ToJsonIterState s;
         QDict *val = qobject_to_qdict(obj);
 
@@ -211,9 +207,7 @@ static void to_json(const QObject *obj, GString *str, int pretty, int indent)
                 g_string_append(str, "    ");
         }
         g_string_append(str, "}");
-        break;
-    }
-    case QTYPE_QLIST: {
+    } else if (g_variant_is_of_type (obj, G_VARIANT_TYPE_ARRAY)) {
         ToJsonIterState s;
         QList *val = qobject_to_qlist(obj);
 
@@ -230,9 +224,7 @@ static void to_json(const QObject *obj, GString *str, int pretty, int indent)
                 g_string_append(str, "    ");
         }
         g_string_append(str, "]");
-        break;
-    }
-    case QTYPE_QFLOAT: {
+    } else if (g_variant_is_of_type (obj, G_VARIANT_TYPE_DOUBLE)) {
         QFloat *val = qobject_to_qfloat(obj);
         char buffer[1024];
         int len;
@@ -249,9 +241,7 @@ static void to_json(const QObject *obj, GString *str, int pretty, int indent)
         }
         
         g_string_append(str, buffer);
-        break;
-    }
-    case QTYPE_QBOOL: {
+    } else if (g_variant_is_of_type (obj, G_VARIANT_TYPE_BOOLEAN)) {
         QBool *val = qobject_to_qbool(obj);
 
         if (qbool_get_int(val)) {
@@ -259,16 +249,10 @@ static void to_json(const QObject *obj, GString *str, int pretty, int indent)
         } else {
             g_string_append(str, "false");
         }
-        break;
-    }
-    case QTYPE_QERROR:
-        /* XXX: should QError be emitted? */
-    case QTYPE_NONE:
-        break;
     }
 }
 
-char *qobject_to_json(const QObject *obj)
+char *qobject_to_json(QObject *obj)
 {
     GString *str = g_string_sized_new(30);
 
@@ -277,7 +261,7 @@ char *qobject_to_json(const QObject *obj)
     return g_string_free (str, FALSE);
 }
 
-char *qobject_to_json_pretty(const QObject *obj)
+char *qobject_to_json_pretty(QObject *obj)
 {
     GString *str = g_string_sized_new(30);
 

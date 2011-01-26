@@ -16,13 +16,10 @@
 #include <stdint.h>
 #include "qobject.h"
 
-typedef struct QInt {
-    QObject_HEAD;
-    int64_t value;
-} QInt;
+typedef GVariant QInt;
 
-QInt *qint_from_int(int64_t value);
-int64_t qint_get_int(const QInt *qi);
-QInt *qobject_to_qint(const QObject *obj);
+#define qint_from_int(x)	g_variant_new_int64(x)
+#define qint_get_int(x)		g_variant_get_int64(x)
+#define qobject_to_qint(x)	(g_variant_get_int64(x), (x))
 
 #endif /* QINT_H */

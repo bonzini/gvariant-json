@@ -14,36 +14,22 @@
 #define QLIST_H
 
 #include "qobject.h"
-#include "qemu-queue.h"
 
-typedef struct QListEntry {
-    QObject *value;
-    QTAILQ_ENTRY(QListEntry) next;
-} QListEntry;
+typedef GVariant QList;
+typedef GVariant QListEntry;
 
-typedef struct QList {
-    QObject_HEAD;
-    QTAILQ_HEAD(,QListEntry) head;
-} QList;
+#define qlist_empty(qlist)	(g_variant_n_children(qlist) == 0)
+#define qobject_to_qlist(qlist) (qlist)
 
-#define qlist_append(qlist, obj) \
-        qlist_append_obj(qlist, QOBJECT(obj))
-
-#define QLIST_FOREACH_ENTRY(qlist, var)             \
-        for ((var) = ((qlist)->head.tqh_first);     \
-            (var);                                  \
-            (var) = ((var)->next.tqe_next))
-
-static inline QObject *qlist_entry_obj(const QListEntry *entry)
+static inline void qlist_iter(QList *qlist,
+                 void (*iter)(QObject *obj, void *opaque), void *opaque)
 {
-    return entry->value;
-}
+    GVariant *var;
+    GVariantIter _iter;
 
-QList *qlist_new(void);
-void qlist_append_obj(QList *qlist, QObject *obj);
-void qlist_iter(const QList *qlist,
-                void (*iter)(QObject *obj, void *opaque), void *opaque);
-int qlist_empty(const QList *qlist);
-QList *qobject_to_qlist(const QObject *obj);
+    g_variant_iter_init(&_iter, qlist);
+    while (g_variant_iter_loop (&_iter, "v", &var))
+      iter (var, opaque);
+}
 
 #endif /* QLIST_H */

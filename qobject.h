@@ -34,89 +34,20 @@
 
 #include <stddef.h>
 #include <assert.h>
+#include <glib.h>
 
-#ifndef offsetof
-#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *) 0)->MEMBER)
-#endif
-
-#ifndef container_of
-#define container_of(ptr, type, member) ({                      \
-        const typeof(((type *) 0)->member) *__mptr = (ptr);     \
-        (type *) ((char *) __mptr - offsetof(type, member));})
-#endif
-
-typedef enum {
-    QTYPE_NONE,
-    QTYPE_QINT,
-    QTYPE_QSTRING,
-    QTYPE_QDICT,
-    QTYPE_QLIST,
-    QTYPE_QFLOAT,
-    QTYPE_QBOOL,
-    QTYPE_QERROR,
-} qtype_code;
-
-struct QObject;
-
-typedef struct QType {
-    qtype_code code;
-    void (*destroy)(struct QObject *);
-} QType;
-
-typedef struct QObject {
-    const QType *type;
-    size_t refcnt;
-} QObject;
-
-/* Objects definitions must include this */
-#define QObject_HEAD  \
-    QObject base
+typedef GVariant QObject;
 
 /* Get the 'base' part of an object */
-#define QOBJECT(obj) (&(obj)->base)
+#define QOBJECT(obj) (obj)
+
+#define qobject_incref(obj)      g_variant_ref(obj)
+#define qobject_decref(obj)      g_variant_unref(obj)
 
 /* High-level interface for qobject_incref() */
-#define QINCREF(obj)      \
-    qobject_incref(QOBJECT(obj))
+#define QINCREF(obj)      g_variant_ref(obj)
 
 /* High-level interface for qobject_decref() */
-#define QDECREF(obj)              \
-    qobject_decref(QOBJECT(obj))
-
-/* Initialize an object to default values */
-#define QOBJECT_INIT(obj, qtype_type)   \
-    obj->base.refcnt = 1;               \
-    obj->base.type   = qtype_type
-
-/**
- * qobject_incref(): Increment QObject's reference count
- */
-static inline void qobject_incref(QObject *obj)
-{
-    if (obj)
-        obj->refcnt++;
-}
-
-/**
- * qobject_decref(): Decrement QObject's reference count, deallocate
- * when it reaches zero
- */
-static inline void qobject_decref(QObject *obj)
-{
-    if (obj && --obj->refcnt == 0) {
-        assert(obj->type != NULL);
-        assert(obj->type->destroy != NULL);
-        obj->type->destroy(obj);
-    }
-}
-
-/**
- * qobject_type(): Return the QObject's type
- */
-static inline qtype_code qobject_type(const QObject *obj)
-{
-    assert(obj->type != NULL);
-    return obj->type->code;
-}
+#define QDECREF(obj)      g_variant_unref(obj)
 
 #endif /* QOBJECT_H */

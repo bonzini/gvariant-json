@@ -16,16 +16,10 @@
 #include <stdint.h>
 #include "qobject.h"
 
-typedef struct QString {
-    QObject_HEAD;
-    char *string;
-    size_t length;
-} QString;
+typedef GVariant QString;
 
-QString *qstring_new(void);
-QString *qstring_from_str(const char *str);
-QString *qstring_from_substr(const char *str, int start, int end);
-const char *qstring_get_str(const QString *qstring);
-QString *qobject_to_qstring(const QObject *obj);
+#define qstring_from_str(str)	  g_variant_new_string(str)
+#define qstring_get_str(str)	  g_variant_get_string(str, NULL)
+#define qobject_to_qstring(str)	  (g_variant_get_string(str, NULL), (str))
 
 #endif /* QSTRING_H */

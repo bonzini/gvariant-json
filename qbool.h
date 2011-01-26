@@ -17,13 +17,10 @@
 #include <stdint.h>
 #include "qobject.h"
 
-typedef struct QBool {
-    QObject_HEAD;
-    int value;
-} QBool;
+typedef GVariant QBool;
 
-QBool *qbool_from_int(int value);
-int qbool_get_int(const QBool *qb);
-QBool *qobject_to_qbool(const QObject *obj);
+#define qbool_from_int(x)	g_variant_new_boolean(x)
+#define qbool_get_int(x)	g_variant_get_boolean(x)
+#define qobject_to_qbool(x)	(g_variant_get_boolean(x), (x))
 
 #endif /* QBOOL_H */

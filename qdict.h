@@ -15,53 +15,124 @@
 
 #include "qobject.h"
 #include "qlist.h"
-#include "qemu-queue.h"
 #include <stdint.h>
+#include <stdbool.h>
 
-#define QDICT_BUCKET_MAX 512
+#if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION <= 26
+extern
+gboolean
+g_variant_lookup (GVariant    *dictionary,
+                  const gchar *key,
+                  const gchar *format_string,
+                  ...);
 
-typedef struct QDictEntry {
-    char *key;
-    QObject *value;
-    QLIST_ENTRY(QDictEntry) next;
-} QDictEntry;
+extern 
+GVariant *
+g_variant_lookup_value (GVariant           *dictionary,
+                        const gchar        *key,
+                        const GVariantType *expected_type);
+#endif
 
-typedef struct QDict {
-    QObject_HEAD;
-    size_t size;
-    QLIST_HEAD(,QDictEntry) table[QDICT_BUCKET_MAX];
-} QDict;
+typedef GVariant QDictEntry;
+typedef GVariant QDict;
 
 /* Object API */
-QDict *qdict_new(void);
-const char *qdict_entry_key(const QDictEntry *entry);
-QObject *qdict_entry_value(const QDictEntry *entry);
-size_t qdict_size(const QDict *qdict);
-void qdict_put_obj(QDict *qdict, const char *key, QObject *value);
-void qdict_del(QDict *qdict, const char *key);
-int qdict_haskey(const QDict *qdict, const char *key);
-QObject *qdict_get(const QDict *qdict, const char *key);
-QDict *qobject_to_qdict(const QObject *obj);
-void qdict_iter(const QDict *qdict,
-                void (*iter)(const char *key, QObject *obj, void *opaque),
-                void *opaque);
-const QDictEntry *qdict_first(const QDict *qdict);
-const QDictEntry *qdict_next(const QDict *qdict, const QDictEntry *entry);
+#define qdict_size(qdict) \
+        g_variant_get_n_children(qdict)
+#define qobject_to_qdict(obj) \
+        (obj)
 
-/* Helper to qdict_put_obj(), accepts any object */
-#define qdict_put(qdict, key, obj) \
-        qdict_put_obj(qdict, key, QOBJECT(obj))
+#define qdict_do_variant_lookup(qdict, key, type, c_type) ({ \
+  c_type _val = (c_type) 0; g_variant_lookup(qdict, key, type, &_val); _val; })
+
+static inline bool qdict_haskey(QDict *qdict, const char *key)
+{
+    GVariant *value;
+    value = g_variant_lookup_value(qdict, key, NULL);
+    if (value)
+        g_variant_unref(value);
+    return value != NULL;
+}
+
+#define qdict_get_bool(qdict, key) \
+        qdict_do_variant_lookup(qdict, key, "b", bool)
+#define qdict_get_str(qdict, key) \
+        qdict_do_variant_lookup(qdict, key, "s", const char *)
+#define qdict_get_qlist(qdict, key) \
+        qdict_do_variant_lookup(qdict, key, "av", GVariant *)
+
+#define qdict_get_qdict(qdict, key) \
+        qdict_do_variant_lookup(qdict, key, "a{sv}", GVariant *)
+
+/* Watch out, different reference semantics!  */
+#define qdict_get(qdict, key) \
+        g_variant_lookup_value(qdict, key, NULL)
+
+static inline void qdict_iter(QDict *qdict,
+                 void (*iter)(const char *key, QObject *value, void *opaque),
+                 void *opaque)
+{
+    GVariantIter _iter;
+    const char *key;
+    GVariant *value;
+    g_variant_iter_init(&_iter, qdict);
+    while (g_variant_iter_loop (&_iter, "{sv}", &key, &value)) {
+        iter (key, value, opaque);
+    }
+}
 
 /* High level helpers */
-double qdict_get_double(const QDict *qdict, const char *key);
-int64_t qdict_get_int(const QDict *qdict, const char *key);
-int qdict_get_bool(const QDict *qdict, const char *key);
-QList *qdict_get_qlist(const QDict *qdict, const char *key);
-QDict *qdict_get_qdict(const QDict *qdict, const char *key);
-const char *qdict_get_str(const QDict *qdict, const char *key);
-int64_t qdict_get_try_int(const QDict *qdict, const char *key,
-                          int64_t def_value);
-int qdict_get_try_bool(const QDict *qdict, const char *key, int def_value);
-const char *qdict_get_try_str(const QDict *qdict, const char *key);
+static inline double qdict_get_double(QDict *qdict, const char *key)
+{
+    GVariant *value = g_variant_lookup_value (qdict, key, NULL);
+    double result;
+    if (g_variant_is_of_type (value, G_VARIANT_TYPE_DOUBLE))
+        result = g_variant_get_double (value);
+    else
+        result = g_variant_get_int64 (value);
+    g_variant_unref(value);
+    return result;
+}
+
+static inline int64_t qdict_get_try_int(QDict *qdict, const char *key,
+                                        int64_t def_value)
+{
+    GVariant *value = g_variant_lookup_value (qdict, key, NULL);
+    int64_t result;
+    if (g_variant_is_of_type (value, G_VARIANT_TYPE_INT64))
+        result = g_variant_get_int64 (value);
+    else
+        result = def_value;
+
+    g_variant_unref(value);
+    return def_value;
+}
+
+static inline int qdict_get_try_bool(QDict *qdict, const char *key, int def_value)
+{
+    GVariant *value = g_variant_lookup_value (qdict, key, NULL);
+    int result;
+    if (g_variant_is_of_type (value, G_VARIANT_TYPE_BOOLEAN))
+        result = g_variant_get_boolean (value);
+    else
+        result = def_value;
+
+    g_variant_unref(value);
+    return def_value;
+}
+
+static inline
+const char *qdict_get_try_str(QDict *qdict, const char *key)
+{
+    GVariant *value = g_variant_lookup_value (qdict, key, NULL);
+    const char *result;
+    if (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING))
+        result = g_variant_get_string (value, NULL);
+    else
+        result = NULL;
+
+    g_variant_unref(value);
+    return result;
+}
 
 #endif /* QDICT_H */

@@ -19,7 +19,7 @@
 #include "qlist.h"
 #include "qfloat.h"
 #include "qbool.h"
-#include "qjson.h"
+#include "gvariant-json.h"
 
 START_TEST(escaped_string)
 {
@@ -54,7 +54,7 @@ START_TEST(escaped_string)
         obj = qobject_from_json(test_cases[i].encoded);
 
         fail_unless(obj != NULL);
-        fail_unless(qobject_type(obj) == QTYPE_QSTRING);
+        fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_STRING));
         
         qstr = qobject_to_qstring(obj);
         fail_unless(strcmp(qstring_get_str(qstr), test_cases[i].decoded) == 0,
@@ -93,7 +93,7 @@ START_TEST(simple_string)
         obj = qobject_from_json(test_cases[i].encoded);
 
         fail_unless(obj != NULL);
-        fail_unless(qobject_type(obj) == QTYPE_QSTRING);
+        fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_STRING));
         
         qstr = qobject_to_qstring(obj);
         fail_unless(strcmp(qstring_get_str(qstr), test_cases[i].decoded) == 0);
@@ -128,7 +128,7 @@ START_TEST(single_quote_string)
         obj = qobject_from_json(test_cases[i].encoded);
 
         fail_unless(obj != NULL);
-        fail_unless(qobject_type(obj) == QTYPE_QSTRING);
+        fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_STRING));
         
         qstr = qobject_to_qstring(obj);
         fail_unless(strcmp(qstring_get_str(qstr), test_cases[i].decoded) == 0);
@@ -156,7 +156,7 @@ START_TEST(vararg_string)
         obj = qobject_from_jsonf("%s", test_cases[i].decoded);
 
         fail_unless(obj != NULL);
-        fail_unless(qobject_type(obj) == QTYPE_QSTRING);
+        fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_STRING));
         
         qstr = qobject_to_qstring(obj);
         fail_unless(strcmp(qstring_get_str(qstr), test_cases[i].decoded) == 0);
@@ -188,7 +188,7 @@ START_TEST(simple_number)
 
         obj = qobject_from_json(test_cases[i].encoded);
         fail_unless(obj != NULL);
-        fail_unless(qobject_type(obj) == QTYPE_QINT);
+        fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_INT64));
 
         qint = qobject_to_qint(obj);
         fail_unless(qint_get_int(qint) == test_cases[i].decoded);
@@ -226,7 +226,7 @@ START_TEST(float_number)
 
         obj = qobject_from_json(test_cases[i].encoded);
         fail_unless(obj != NULL);
-        fail_unless(qobject_type(obj) == QTYPE_QFLOAT);
+        fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_DOUBLE));
 
         qfloat = qobject_to_qfloat(obj);
         fail_unless(qfloat_get_double(qfloat) == test_cases[i].decoded);
@@ -255,7 +255,7 @@ START_TEST(vararg_number)
 
     obj = qobject_from_jsonf("%d", value);
     fail_unless(obj != NULL);
-    fail_unless(qobject_type(obj) == QTYPE_QINT);
+    fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_INT64));
 
     qint = qobject_to_qint(obj);
     fail_unless(qint_get_int(qint) == value);
@@ -264,7 +264,7 @@ START_TEST(vararg_number)
 
     obj = qobject_from_jsonf("%" PRId64, value64);
     fail_unless(obj != NULL);
-    fail_unless(qobject_type(obj) == QTYPE_QINT);
+    fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_INT64));
 
     qint = qobject_to_qint(obj);
     fail_unless(qint_get_int(qint) == value64);
@@ -273,7 +273,7 @@ START_TEST(vararg_number)
 
     obj = qobject_from_jsonf("%f", valuef);
     fail_unless(obj != NULL);
-    fail_unless(qobject_type(obj) == QTYPE_QFLOAT);
+    fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_DOUBLE));
 
     qfloat = qobject_to_qfloat(obj);
     fail_unless(qfloat_get_double(qfloat) == valuef);
@@ -290,7 +290,7 @@ START_TEST(keyword_literal)
 
     obj = qobject_from_json("true");
     fail_unless(obj != NULL);
-    fail_unless(qobject_type(obj) == QTYPE_QBOOL);
+    fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_BOOLEAN));
 
     qbool = qobject_to_qbool(obj);
     fail_unless(qbool_get_int(qbool) != 0);
@@ -303,7 +303,7 @@ START_TEST(keyword_literal)
 
     obj = qobject_from_json("false");
     fail_unless(obj != NULL);
-    fail_unless(qobject_type(obj) == QTYPE_QBOOL);
+    fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_BOOLEAN));
 
     qbool = qobject_to_qbool(obj);
     fail_unless(qbool_get_int(qbool) == 0);
@@ -316,7 +316,7 @@ START_TEST(keyword_literal)
 
     obj = qobject_from_jsonf("%i", false);
     fail_unless(obj != NULL);
-    fail_unless(qobject_type(obj) == QTYPE_QBOOL);
+    fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_BOOLEAN));
 
     qbool = qobject_to_qbool(obj);
     fail_unless(qbool_get_int(qbool) == 0);
@@ -325,7 +325,7 @@ START_TEST(keyword_literal)
     
     obj = qobject_from_jsonf("%i", true);
     fail_unless(obj != NULL);
-    fail_unless(qobject_type(obj) == QTYPE_QBOOL);
+    fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_BOOLEAN));
 
     qbool = qobject_to_qbool(obj);
     fail_unless(qbool_get_int(qbool) != 0);
@@ -336,6 +336,14 @@ END_TEST
 
 typedef struct LiteralQDictEntry LiteralQDictEntry;
 typedef struct LiteralQObject LiteralQObject;
+
+enum {
+    QTYPE_NONE,
+    QTYPE_QINT,
+    QTYPE_QSTRING,
+    QTYPE_QDICT,
+    QTYPE_QLIST
+};
 
 struct LiteralQObject
 {
@@ -386,7 +394,13 @@ static void compare_helper(QObject *obj, void *opaque)
 
 static int compare_litqobj_to_qobj(LiteralQObject *lhs, QObject *rhs)
 {
-    if (lhs->type != qobject_type(rhs)) {
+    static const GVariantType *types[] = {
+        [QTYPE_QINT] = G_VARIANT_TYPE_INT64,
+        [QTYPE_QSTRING] = G_VARIANT_TYPE_STRING,
+        [QTYPE_QDICT] = G_VARIANT_TYPE_DICTIONARY,
+        [QTYPE_QLIST] = G_VARIANT_TYPE_ARRAY
+    };
+    if (!g_variant_is_of_type (rhs, types[lhs->type])) {
         return 0;
     }
 
@@ -402,8 +416,10 @@ static int compare_litqobj_to_qobj(LiteralQObject *lhs, QObject *rhs)
             QObject *obj = qdict_get(qobject_to_qdict(rhs), lhs->value.qdict[i].key);
 
             if (!compare_litqobj_to_qobj(&lhs->value.qdict[i].value, obj)) {
+	        qobject_decref (obj);
                 return 0;
             }
+	    qobject_decref (obj);
         }
 
         return 1;
@@ -461,7 +477,7 @@ START_TEST(simple_dict)
 
         obj = qobject_from_json(test_cases[i].encoded);
         fail_unless(obj != NULL);
-        fail_unless(qobject_type(obj) == QTYPE_QDICT);
+        fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_DICTIONARY));
 
         fail_unless(compare_litqobj_to_qobj(&test_cases[i].decoded, obj) == 1);
 
@@ -470,7 +486,7 @@ START_TEST(simple_dict)
 
         obj = qobject_from_json(str);
         fail_unless(obj != NULL);
-        fail_unless(qobject_type(obj) == QTYPE_QDICT);
+        fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_DICTIONARY));
 
         fail_unless(compare_litqobj_to_qobj(&test_cases[i].decoded, obj) == 1);
         qobject_decref(obj);
@@ -525,7 +541,7 @@ START_TEST(simple_list)
 
         obj = qobject_from_json(test_cases[i].encoded);
         fail_unless(obj != NULL);
-        fail_unless(qobject_type(obj) == QTYPE_QLIST);
+        fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_ARRAY));
 
         fail_unless(compare_litqobj_to_qobj(&test_cases[i].decoded, obj) == 1);
 
@@ -534,7 +550,7 @@ START_TEST(simple_list)
 
         obj = qobject_from_json(str);
         fail_unless(obj != NULL);
-        fail_unless(qobject_type(obj) == QTYPE_QLIST);
+        fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_ARRAY));
 
         fail_unless(compare_litqobj_to_qobj(&test_cases[i].decoded, obj) == 1);
         qobject_decref(obj);
@@ -594,7 +610,7 @@ START_TEST(simple_whitespace)
 
         obj = qobject_from_json(test_cases[i].encoded);
         fail_unless(obj != NULL);
-        fail_unless(qobject_type(obj) == QTYPE_QLIST);
+        fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_ARRAY));
 
         fail_unless(compare_litqobj_to_qobj(&test_cases[i].decoded, obj) == 1);
 
@@ -603,7 +619,7 @@ START_TEST(simple_whitespace)
 
         obj = qobject_from_json(str);
         fail_unless(obj != NULL);
-        fail_unless(qobject_type(obj) == QTYPE_QLIST);
+        fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_ARRAY));
 
         fail_unless(compare_litqobj_to_qobj(&test_cases[i].decoded, obj) == 1);
 
@@ -719,7 +735,7 @@ START_TEST(unterminated_literal)
 END_TEST
 #endif
 
-static Suite *qjson_suite(void)
+static Suite *gvariant_json_suite(void)
 {
     Suite *suite;
     TCase *string_literals, *number_literals, *keyword_literals;
@@ -784,10 +800,10 @@ int main(void)
     Suite *s;
     SRunner *sr;
 
-    s = qjson_suite();
+    s = gvariant_json_suite();
     sr = srunner_create(s);
         
-    srunner_set_fork_status (sr, CK_NOFORK);
+    if (!getenv("FORK")) srunner_set_fork_status (sr, CK_NOFORK);
     srunner_run_all(sr, CK_NORMAL);
     nf = srunner_ntests_failed(sr);
     srunner_free(sr);
