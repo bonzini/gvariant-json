@@ -38,23 +38,6 @@ QList *qlist_new(void)
     return qlist;
 }
 
-static void qlist_copy_elem(QObject *obj, void *opaque)
-{
-    QList *dst = opaque;
-
-    qobject_incref(obj);
-    qlist_append_obj(dst, obj);
-}
-
-QList *qlist_copy(QList *src)
-{
-    QList *dst = qlist_new();
-
-    qlist_iter(src, qlist_copy_elem, dst);
-
-    return dst;
-}
-
 /**
  * qlist_append_obj(): Append an QObject into QList
  *
