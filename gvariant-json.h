@@ -18,11 +18,11 @@
 #include "qobject.h"
 
 #define GCC_FMT_ATTR(a,b)
-GVariant *qobject_from_json(const char *string) GCC_FMT_ATTR(1, 0);
-GVariant *qobject_from_jsonf(const char *string, ...) GCC_FMT_ATTR(1, 2);
-GVariant *qobject_from_jsonv(const char *string, va_list *ap) GCC_FMT_ATTR(1, 0);
+GVariant *g_variant_from_json(const char *string) GCC_FMT_ATTR(1, 0);
+GVariant *g_variant_from_jsonf(const char *string, ...) GCC_FMT_ATTR(1, 2);
+GVariant *g_variant_from_jsonv(const char *string, va_list *ap) GCC_FMT_ATTR(1, 0);
 
-char *qobject_to_json(GVariant *obj);
-char *qobject_to_json_pretty(GVariant *obj);
+char *g_variant_to_json(GVariant *obj);
+char *g_variant_to_json_pretty(GVariant *obj);
 
 #endif /* QJSON_H */

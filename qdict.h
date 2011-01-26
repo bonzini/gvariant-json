@@ -34,52 +34,42 @@ g_variant_lookup_value (GVariant           *dictionary,
 #endif
 
 /* Object API */
-#define qdict_size(qdict) \
-        g_variant_get_n_children(qdict)
+#define g_variant_do_lookup(dict, key, type, c_type) ({ \
+  c_type _val = (c_type) 0; g_variant_lookup(dict, key, type, &_val); _val; })
 
-#define qdict_do_variant_lookup(qdict, key, type, c_type) ({ \
-  c_type _val = (c_type) 0; g_variant_lookup(qdict, key, type, &_val); _val; })
-
-static inline bool qdict_haskey(GVariant *qdict, const char *key)
+static inline bool g_variant_has_key(GVariant *dict, const char *key)
 {
     GVariant *value;
-    value = g_variant_lookup_value(qdict, key, NULL);
+    value = g_variant_lookup_value(dict, key, NULL);
     if (value)
         g_variant_unref(value);
     return value != NULL;
 }
 
-#define qdict_get_bool(qdict, key) \
-        qdict_do_variant_lookup(qdict, key, "b", bool)
-#define qdict_get_str(qdict, key) \
-        qdict_do_variant_lookup(qdict, key, "s", const char *)
-#define qdict_get_qlist(qdict, key) \
-        qdict_do_variant_lookup(qdict, key, "av", GVariant *)
+#define g_variant_lookup_boolean(dict, key) \
+        g_variant_do_lookup(dict, key, "b", bool)
+#define g_variant_lookup_array(dict, key) \
+        g_variant_do_lookup(dict, key, "av", GVariant *)
+#define g_variant_lookup_dictionary(dict, key) \
+        g_variant_do_lookup(dict, key, "a{sv}", GVariant *)
 
-#define qdict_get_qdict(qdict, key) \
-        qdict_do_variant_lookup(qdict, key, "a{sv}", GVariant *)
-
-/* Watch out, different reference semantics!  */
-#define qdict_get(qdict, key) \
-        g_variant_lookup_value(qdict, key, NULL)
-
-static inline void qdict_iter(GVariant *qdict,
+static inline void g_variant_dictionary_iterate(GVariant *dict,
                  void (*iter)(const char *key, GVariant *value, void *opaque),
                  void *opaque)
 {
     GVariantIter _iter;
     const char *key;
     GVariant *value;
-    g_variant_iter_init(&_iter, qdict);
+    g_variant_iter_init(&_iter, dict);
     while (g_variant_iter_loop (&_iter, "{sv}", &key, &value)) {
         iter (key, value, opaque);
     }
 }
 
 /* High level helpers */
-static inline double qdict_get_double(GVariant *qdict, const char *key)
+static inline double g_variant_lookup_double(GVariant *dict, const char *key)
 {
-    GVariant *value = g_variant_lookup_value (qdict, key, NULL);
+    GVariant *value = g_variant_lookup_value (dict, key, NULL);
     double result;
     if (g_variant_is_of_type (value, G_VARIANT_TYPE_DOUBLE))
         result = g_variant_get_double (value);
@@ -89,10 +79,10 @@ static inline double qdict_get_double(GVariant *qdict, const char *key)
     return result;
 }
 
-static inline int64_t qdict_get_try_int(GVariant *qdict, const char *key,
+static inline int64_t g_variant_lookup_int64_default(GVariant *dict, const char *key,
                                         int64_t def_value)
 {
-    GVariant *value = g_variant_lookup_value (qdict, key, NULL);
+    GVariant *value = g_variant_lookup_value (dict, key, NULL);
     int64_t result;
     if (g_variant_is_of_type (value, G_VARIANT_TYPE_INT64))
         result = g_variant_get_int64 (value);
@@ -103,9 +93,9 @@ static inline int64_t qdict_get_try_int(GVariant *qdict, const char *key,
     return def_value;
 }
 
-static inline int qdict_get_try_bool(GVariant *qdict, const char *key, int def_value)
+static inline int g_variant_lookup_boolean_default(GVariant *dict, const char *key, int def_value)
 {
-    GVariant *value = g_variant_lookup_value (qdict, key, NULL);
+    GVariant *value = g_variant_lookup_value (dict, key, NULL);
     int result;
     if (g_variant_is_of_type (value, G_VARIANT_TYPE_BOOLEAN))
         result = g_variant_get_boolean (value);
@@ -117,9 +107,9 @@ static inline int qdict_get_try_bool(GVariant *qdict, const char *key, int def_v
 }
 
 static inline
-const char *qdict_get_try_str(GVariant *qdict, const char *key)
+const char *g_variant_lookup_string(GVariant *dict, const char *key)
 {
-    GVariant *value = g_variant_lookup_value (qdict, key, NULL);
+    GVariant *value = g_variant_lookup_value (dict, key, NULL);
     const char *result;
     if (g_variant_is_of_type (value, G_VARIANT_TYPE_STRING))
         result = g_variant_get_string (value, NULL);

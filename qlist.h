@@ -15,15 +15,13 @@
 
 #include "qobject.h"
 
-#define qlist_empty(qlist)	(g_variant_n_children(qlist) == 0)
-
-static inline void qlist_iter(GVariant *qlist,
+static inline void g_variant_array_iterate(GVariant *array,
                  void (*iter)(GVariant *obj, void *opaque), void *opaque)
 {
     GVariant *var;
     GVariantIter _iter;
 
-    g_variant_iter_init(&_iter, qlist);
+    g_variant_iter_init(&_iter, array);
     while (g_variant_iter_loop (&_iter, "v", &var))
       iter (var, opaque);
 }

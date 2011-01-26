@@ -35,7 +35,7 @@ static void parse_json(JSONMessageParser *parser, GQueue *tokens)
     s->result = json_parser_parse(tokens, s->ap);
 }
 
-GVariant *qobject_from_jsonv(const char *string, va_list *ap)
+GVariant *g_variant_from_jsonv(const char *string, va_list *ap)
 {
     JSONParsingState state = {};
 
@@ -49,22 +49,22 @@ GVariant *qobject_from_jsonv(const char *string, va_list *ap)
     return state.result;
 }
 
-GVariant *qobject_from_json(const char *string)
+GVariant *g_variant_from_json(const char *string)
 {
-    return qobject_from_jsonv(string, NULL);
+    return g_variant_from_jsonv(string, NULL);
 }
 
 /*
  * IMPORTANT: This function aborts on error, thus it must not
  * be used with untrusted arguments.
  */
-GVariant *qobject_from_jsonf(const char *string, ...)
+GVariant *g_variant_from_jsonf(const char *string, ...)
 {
     GVariant *obj;
     va_list ap;
 
     va_start(ap, string);
-    obj = qobject_from_jsonv(string, &ap);
+    obj = g_variant_from_jsonv(string, &ap);
     va_end(ap);
 
     assert(obj != NULL);
@@ -194,7 +194,7 @@ static void to_json(GVariant *obj, GString *str, int pretty, int indent)
         s.indent = indent + 1;
         s.pretty = pretty;
         g_string_append(str, "{");
-        qdict_iter(obj, to_json_dict_iter, &s);
+        g_variant_dictionary_iterate(obj, to_json_dict_iter, &s);
         if (pretty) {
             int j;
             g_string_append_c(str, '\n');
@@ -210,7 +210,7 @@ static void to_json(GVariant *obj, GString *str, int pretty, int indent)
         s.indent = indent + 1;
         s.pretty = pretty;
         g_string_append(str, "[");
-        qlist_iter(obj, (void *)to_json_list_iter, &s);
+        g_variant_array_iterate(obj, (void *)to_json_list_iter, &s);
         if (pretty) {
             int j;
             g_string_append_c(str, '\n');
@@ -244,7 +244,7 @@ static void to_json(GVariant *obj, GString *str, int pretty, int indent)
     }
 }
 
-char *qobject_to_json(GVariant *obj)
+char *g_variant_to_json(GVariant *obj)
 {
     GString *str = g_string_sized_new(30);
 
@@ -253,7 +253,7 @@ char *qobject_to_json(GVariant *obj)
     return g_string_free (str, FALSE);
 }
 
-char *qobject_to_json_pretty(GVariant *obj)
+char *g_variant_to_json_pretty(GVariant *obj)
 {
     GString *str = g_string_sized_new(30);
 

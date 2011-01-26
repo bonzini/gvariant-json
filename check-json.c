@@ -47,7 +47,7 @@ START_TEST(escaped_string)
         GVariant *obj;
         char *str;
 
-        obj = qobject_from_json(test_cases[i].encoded);
+        obj = g_variant_from_json(test_cases[i].encoded);
 
         fail_unless(obj != NULL);
         fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_STRING));
@@ -56,7 +56,7 @@ START_TEST(escaped_string)
                     "%s != %s\n", g_variant_get_string(obj, NULL), test_cases[i].decoded);
 
         if (test_cases[i].skip == 0) {
-            str = qobject_to_json(obj);
+            str = g_variant_to_json(obj);
             fail_unless(strcmp(str,test_cases[i].encoded) == 0,
                         "%s != %s\n", str, test_cases[i].encoded);
 
@@ -84,14 +84,14 @@ START_TEST(simple_string)
         GVariant *obj;
         char *str;
 
-        obj = qobject_from_json(test_cases[i].encoded);
+        obj = g_variant_from_json(test_cases[i].encoded);
 
         fail_unless(obj != NULL);
         fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_STRING));
         
         fail_unless(strcmp(g_variant_get_string(obj, NULL), test_cases[i].decoded) == 0);
 
-        str = qobject_to_json(obj);
+        str = g_variant_to_json(obj);
         fail_unless(strcmp(str, test_cases[i].encoded) == 0);
 
         g_variant_unref(obj);
@@ -117,7 +117,7 @@ START_TEST(single_quote_string)
     for (i = 0; test_cases[i].encoded; i++) {
         GVariant *obj;
 
-        obj = qobject_from_json(test_cases[i].encoded);
+        obj = g_variant_from_json(test_cases[i].encoded);
 
         fail_unless(obj != NULL);
         fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_STRING));
@@ -143,7 +143,7 @@ START_TEST(vararg_string)
     for (i = 0; test_cases[i].decoded; i++) {
         GVariant *obj;
 
-        obj = qobject_from_jsonf("%s", test_cases[i].decoded);
+        obj = g_variant_from_jsonf("%s", test_cases[i].decoded);
 
         fail_unless(obj != NULL);
         fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_STRING));
@@ -174,7 +174,7 @@ START_TEST(simple_number)
     for (i = 0; test_cases[i].encoded; i++) {
         GVariant *obj;
 
-        obj = qobject_from_json(test_cases[i].encoded);
+        obj = g_variant_from_json(test_cases[i].encoded);
         fail_unless(obj != NULL);
         fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_INT64));
 
@@ -182,7 +182,7 @@ START_TEST(simple_number)
         if (test_cases[i].skip == 0) {
             char *str;
 
-            str = qobject_to_json(obj);
+            str = g_variant_to_json(obj);
             fail_unless(strcmp(str, test_cases[i].encoded) == 0);
             free(str);
         }
@@ -210,7 +210,7 @@ START_TEST(float_number)
     for (i = 0; test_cases[i].encoded; i++) {
         GVariant *obj;
 
-        obj = qobject_from_json(test_cases[i].encoded);
+        obj = g_variant_from_json(test_cases[i].encoded);
         fail_unless(obj != NULL);
         fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_DOUBLE));
 
@@ -219,7 +219,7 @@ START_TEST(float_number)
         if (test_cases[i].skip == 0) {
             char *str;
 
-            str = qobject_to_json(obj);
+            str = g_variant_to_json(obj);
             fail_unless(strcmp(str, test_cases[i].encoded) == 0);
             free(str);
         }
@@ -236,7 +236,7 @@ START_TEST(vararg_number)
     int64_t value64 = 0x2342342343LL;
     double valuef = 2.323423423;
 
-    obj = qobject_from_jsonf("%d", value);
+    obj = g_variant_from_jsonf("%d", value);
     fail_unless(obj != NULL);
     fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_INT64));
 
@@ -244,7 +244,7 @@ START_TEST(vararg_number)
 
     g_variant_unref(obj);
 
-    obj = qobject_from_jsonf("%" PRId64, value64);
+    obj = g_variant_from_jsonf("%" PRId64, value64);
     fail_unless(obj != NULL);
     fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_INT64));
 
@@ -252,7 +252,7 @@ START_TEST(vararg_number)
 
     g_variant_unref(obj);
 
-    obj = qobject_from_jsonf("%f", valuef);
+    obj = g_variant_from_jsonf("%f", valuef);
     fail_unless(obj != NULL);
     fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_DOUBLE));
 
@@ -267,31 +267,31 @@ START_TEST(keyword_literal)
     GVariant *obj;
     char *str;
 
-    obj = qobject_from_json("true");
+    obj = g_variant_from_json("true");
     fail_unless(obj != NULL);
     fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_BOOLEAN));
 
     fail_unless(g_variant_get_boolean(obj) != 0);
 
-    str = qobject_to_json(obj);
+    str = g_variant_to_json(obj);
     fail_unless(strcmp(str, "true") == 0);
     free(str);
 
     g_variant_unref(obj);
 
-    obj = qobject_from_json("false");
+    obj = g_variant_from_json("false");
     fail_unless(obj != NULL);
     fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_BOOLEAN));
 
     fail_unless(g_variant_get_boolean(obj) == 0);
 
-    str = qobject_to_json(obj);
+    str = g_variant_to_json(obj);
     fail_unless(strcmp(str, "false") == 0);
     free(str);
 
     g_variant_unref(obj);
 
-    obj = qobject_from_jsonf("%i", false);
+    obj = g_variant_from_jsonf("%i", false);
     fail_unless(obj != NULL);
     fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_BOOLEAN));
 
@@ -299,7 +299,7 @@ START_TEST(keyword_literal)
 
     g_variant_unref(obj);
     
-    obj = qobject_from_jsonf("%i", true);
+    obj = g_variant_from_jsonf("%i", true);
     fail_unless(obj != NULL);
     fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_BOOLEAN));
 
@@ -388,7 +388,8 @@ static int compare_litqobj_to_qobj(LiteralGVariant *lhs, GVariant *rhs)
         int i;
 
         for (i = 0; lhs->value.qdict[i].key; i++) {
-            GVariant *obj = qdict_get(rhs, lhs->value.qdict[i].key);
+            GVariant *obj = g_variant_lookup_value(rhs, lhs->value.qdict[i].key,
+						   NULL);
 
             if (!compare_litqobj_to_qobj(&lhs->value.qdict[i].value, obj)) {
 	        g_variant_unref (obj);
@@ -406,7 +407,7 @@ static int compare_litqobj_to_qobj(LiteralGVariant *lhs, GVariant *rhs)
         helper.objs = lhs->value.qlist;
         helper.result = 1;
         
-        qlist_iter(rhs, compare_helper, &helper);
+        g_variant_array_iterate(rhs, compare_helper, &helper);
 
         return helper.result;
     }
@@ -450,16 +451,16 @@ START_TEST(simple_dict)
         GVariant *obj;
         char *str;
 
-        obj = qobject_from_json(test_cases[i].encoded);
+        obj = g_variant_from_json(test_cases[i].encoded);
         fail_unless(obj != NULL);
         fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_DICTIONARY));
 
         fail_unless(compare_litqobj_to_qobj(&test_cases[i].decoded, obj) == 1);
 
-        str = qobject_to_json(obj);
+        str = g_variant_to_json(obj);
         g_variant_unref(obj);
 
-        obj = qobject_from_json(str);
+        obj = g_variant_from_json(str);
         fail_unless(obj != NULL);
         fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_DICTIONARY));
 
@@ -514,16 +515,16 @@ START_TEST(simple_list)
         GVariant *obj;
         char *str;
 
-        obj = qobject_from_json(test_cases[i].encoded);
+        obj = g_variant_from_json(test_cases[i].encoded);
         fail_unless(obj != NULL);
         fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_ARRAY));
 
         fail_unless(compare_litqobj_to_qobj(&test_cases[i].decoded, obj) == 1);
 
-        str = qobject_to_json(obj);
+        str = g_variant_to_json(obj);
         g_variant_unref(obj);
 
-        obj = qobject_from_json(str);
+        obj = g_variant_from_json(str);
         fail_unless(obj != NULL);
         fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_ARRAY));
 
@@ -583,16 +584,16 @@ START_TEST(simple_whitespace)
         GVariant *obj;
         char *str;
 
-        obj = qobject_from_json(test_cases[i].encoded);
+        obj = g_variant_from_json(test_cases[i].encoded);
         fail_unless(obj != NULL);
         fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_ARRAY));
 
         fail_unless(compare_litqobj_to_qobj(&test_cases[i].decoded, obj) == 1);
 
-        str = qobject_to_json(obj);
+        str = g_variant_to_json(obj);
         g_variant_unref(obj);
 
-        obj = qobject_from_json(str);
+        obj = g_variant_from_json(str);
         fail_unless(obj != NULL);
         fail_unless(g_variant_is_of_type(obj, G_VARIANT_TYPE_ARRAY));
 
@@ -617,10 +618,10 @@ START_TEST(simple_varargs)
                         {}})),
             {}}));
 
-    embedded_obj = qobject_from_json("[32, 42]");
+    embedded_obj = g_variant_from_json("[32, 42]");
     fail_unless(embedded_obj != NULL);
 
-    obj = qobject_from_jsonf("[%d, 2, %p]", 1, embedded_obj);
+    obj = g_variant_from_jsonf("[%d, 2, %p]", 1, embedded_obj);
     fail_unless(obj != NULL);
 
     fail_unless(compare_litqobj_to_qobj(&decoded, obj) == 1);
@@ -633,63 +634,63 @@ START_TEST(empty_input)
 {
     const char *empty = "";
 
-    GVariant *obj = qobject_from_json(empty);
+    GVariant *obj = g_variant_from_json(empty);
     fail_unless(obj == NULL);
 }
 END_TEST
 
 START_TEST(unterminated_string)
 {
-    GVariant *obj = qobject_from_json("\"abc");
+    GVariant *obj = g_variant_from_json("\"abc");
     fail_unless(obj == NULL);
 }
 END_TEST
 
 START_TEST(unterminated_sq_string)
 {
-    GVariant *obj = qobject_from_json("'abc");
+    GVariant *obj = g_variant_from_json("'abc");
     fail_unless(obj == NULL);
 }
 END_TEST
 
 START_TEST(unterminated_escape)
 {
-    GVariant *obj = qobject_from_json("\"abc\\\"");
+    GVariant *obj = g_variant_from_json("\"abc\\\"");
     fail_unless(obj == NULL);
 }
 END_TEST
 
 START_TEST(unterminated_array)
 {
-    GVariant *obj = qobject_from_json("[32");
+    GVariant *obj = g_variant_from_json("[32");
     fail_unless(obj == NULL);
 }
 END_TEST
 
 START_TEST(unterminated_array_comma)
 {
-    GVariant *obj = qobject_from_json("[32,");
+    GVariant *obj = g_variant_from_json("[32,");
     fail_unless(obj == NULL);
 }
 END_TEST
 
 START_TEST(invalid_array_comma)
 {
-    GVariant *obj = qobject_from_json("[32,}");
+    GVariant *obj = g_variant_from_json("[32,}");
     fail_unless(obj == NULL);
 }
 END_TEST
 
 START_TEST(unterminated_dict)
 {
-    GVariant *obj = qobject_from_json("{'abc':32");
+    GVariant *obj = g_variant_from_json("{'abc':32");
     fail_unless(obj == NULL);
 }
 END_TEST
 
 START_TEST(unterminated_dict_comma)
 {
-    GVariant *obj = qobject_from_json("{'abc':32,");
+    GVariant *obj = g_variant_from_json("{'abc':32,");
     fail_unless(obj == NULL);
 }
 END_TEST
@@ -697,14 +698,14 @@ END_TEST
 #if 0
 START_TEST(invalid_dict_comma)
 {
-    GVariant *obj = qobject_from_json("{'abc':32,}");
+    GVariant *obj = g_variant_from_json("{'abc':32,}");
     fail_unless(obj == NULL);
 }
 END_TEST
 
 START_TEST(unterminated_literal)
 {
-    GVariant *obj = qobject_from_json("nul");
+    GVariant *obj = g_variant_from_json("nul");
     fail_unless(obj == NULL);
 }
 END_TEST
