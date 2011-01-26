@@ -64,7 +64,7 @@ static inline bool qdict_haskey(GVariant *qdict, const char *key)
         g_variant_lookup_value(qdict, key, NULL)
 
 static inline void qdict_iter(GVariant *qdict,
-                 void (*iter)(const char *key, QObject *value, void *opaque),
+                 void (*iter)(const char *key, GVariant *value, void *opaque),
                  void *opaque)
 {
     GVariantIter _iter;

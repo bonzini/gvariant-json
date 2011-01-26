@@ -17,8 +17,8 @@
 
 #define qlist_empty(qlist)	(g_variant_n_children(qlist) == 0)
 
-static inline void qlist_iter(QObject *qlist,
-                 void (*iter)(QObject *obj, void *opaque), void *opaque)
+static inline void qlist_iter(GVariant *qlist,
+                 void (*iter)(GVariant *obj, void *opaque), void *opaque)
 {
     GVariant *var;
     GVariantIter _iter;

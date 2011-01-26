@@ -1,5 +1,5 @@
 /*
- * QObject JSON integration
+ * GVariant JSON integration
  *
  * Copyright IBM, Corp. 2009
  *
@@ -18,17 +18,15 @@
 #include "json-parser.h"
 #include "json-streamer.h"
 #include "gvariant-json.h"
-#include "qint.h"
+#include "qobject.h"
 #include "qlist.h"
-#include "qbool.h"
-#include "qfloat.h"
 #include "qdict.h"
 
 typedef struct JSONParsingState
 {
     JSONMessageParser parser;
     va_list *ap;
-    QObject *result;
+    GVariant *result;
 } JSONParsingState;
 
 static void parse_json(JSONMessageParser *parser, GQueue *tokens)
@@ -37,7 +35,7 @@ static void parse_json(JSONMessageParser *parser, GQueue *tokens)
     s->result = json_parser_parse(tokens, s->ap);
 }
 
-QObject *qobject_from_jsonv(const char *string, va_list *ap)
+GVariant *qobject_from_jsonv(const char *string, va_list *ap)
 {
     JSONParsingState state = {};
 
@@ -51,7 +49,7 @@ QObject *qobject_from_jsonv(const char *string, va_list *ap)
     return state.result;
 }
 
-QObject *qobject_from_json(const char *string)
+GVariant *qobject_from_json(const char *string)
 {
     return qobject_from_jsonv(string, NULL);
 }
@@ -60,9 +58,9 @@ QObject *qobject_from_json(const char *string)
  * IMPORTANT: This function aborts on error, thus it must not
  * be used with untrusted arguments.
  */
-QObject *qobject_from_jsonf(const char *string, ...)
+GVariant *qobject_from_jsonf(const char *string, ...)
 {
-    QObject *obj;
+    GVariant *obj;
     va_list ap;
 
     va_start(ap, string);
@@ -81,12 +79,12 @@ typedef struct ToJsonIterState
     GString *str;
 } ToJsonIterState;
 
-static void to_json(QObject *obj, GString *str, int pretty, int indent);
+static void to_json(GVariant *obj, GString *str, int pretty, int indent);
 
-static void to_json_dict_iter(const char *key, QObject *obj, void *opaque)
+static void to_json_dict_iter(const char *key, GVariant *obj, void *opaque)
 {
     ToJsonIterState *s = opaque;
-    QObject *qkey;
+    GVariant *qkey;
     int j;
 
     if (s->count)
@@ -98,16 +96,16 @@ static void to_json_dict_iter(const char *key, QObject *obj, void *opaque)
             g_string_append(s->str, "    ");
     }
 
-    qkey = qstring_from_str(key);
+    qkey = g_variant_new_string(key);
     to_json(qkey, s->str, s->pretty, s->indent);
-    qobject_decref(qkey);
+    g_variant_unref(qkey);
 
     g_string_append(s->str, ": ");
     to_json(obj, s->str, s->pretty, s->indent);
     s->count++;
 }
 
-static void to_json_list_iter(QObject *obj, void *opaque)
+static void to_json_list_iter(GVariant *obj, void *opaque)
 {
     ToJsonIterState *s = opaque;
     int j;
@@ -125,15 +123,15 @@ static void to_json_list_iter(QObject *obj, void *opaque)
     s->count++;
 }
 
-static void to_json(QObject *obj, GString *str, int pretty, int indent)
+static void to_json(GVariant *obj, GString *str, int pretty, int indent)
 {
     if (g_variant_is_of_type (obj, G_VARIANT_TYPE_INT64)) {
-        g_string_append_printf(str, "%" PRId64, qint_get_int(obj));
+        g_string_append_printf(str, "%" PRId64, g_variant_get_int64(obj));
     }
     else if (g_variant_is_of_type (obj, G_VARIANT_TYPE_STRING)) {
         const char *ptr;
 
-        ptr = qstring_get_str(obj);
+        ptr = g_variant_get_string(obj, NULL);
         g_string_append_c(str, '\"');
         while (*ptr) {
             if ((ptr[0] & 0xE0) == 0xE0 &&
@@ -224,7 +222,7 @@ static void to_json(QObject *obj, GString *str, int pretty, int indent)
         char buffer[1024];
         int len;
 
-        len = g_snprintf(buffer, sizeof(buffer), "%f", qfloat_get_double(obj));
+        len = g_snprintf(buffer, sizeof(buffer), "%f", g_variant_get_double(obj));
         while (len > 0 && buffer[len - 1] == '0') {
             len--;
         }
@@ -238,7 +236,7 @@ static void to_json(QObject *obj, GString *str, int pretty, int indent)
         g_string_append(str, buffer);
     } else if (g_variant_is_of_type (obj, G_VARIANT_TYPE_BOOLEAN)) {
 
-        if (qbool_get_int(obj)) {
+        if (g_variant_get_boolean(obj)) {
             g_string_append(str, "true");
         } else {
             g_string_append(str, "false");
@@ -246,7 +244,7 @@ static void to_json(QObject *obj, GString *str, int pretty, int indent)
     }
 }
 
-char *qobject_to_json(QObject *obj)
+char *qobject_to_json(GVariant *obj)
 {
     GString *str = g_string_sized_new(30);
 
@@ -255,7 +253,7 @@ char *qobject_to_json(QObject *obj)
     return g_string_free (str, FALSE);
 }
 
-char *qobject_to_json_pretty(QObject *obj)
+char *qobject_to_json_pretty(GVariant *obj)
 {
     GString *str = g_string_sized_new(30);
 

@@ -1,5 +1,5 @@
 /*
- * QObject JSON integration
+ * GVariant JSON integration
  *
  * Copyright IBM, Corp. 2009
  *
@@ -16,14 +16,13 @@
 
 #include <stdarg.h>
 #include "qobject.h"
-#include "qstring.h"
 
 #define GCC_FMT_ATTR(a,b)
-QObject *qobject_from_json(const char *string) GCC_FMT_ATTR(1, 0);
-QObject *qobject_from_jsonf(const char *string, ...) GCC_FMT_ATTR(1, 2);
-QObject *qobject_from_jsonv(const char *string, va_list *ap) GCC_FMT_ATTR(1, 0);
+GVariant *qobject_from_json(const char *string) GCC_FMT_ATTR(1, 0);
+GVariant *qobject_from_jsonf(const char *string, ...) GCC_FMT_ATTR(1, 2);
+GVariant *qobject_from_jsonv(const char *string, va_list *ap) GCC_FMT_ATTR(1, 0);
 
-char *qobject_to_json(QObject *obj);
-char *qobject_to_json_pretty(QObject *obj);
+char *qobject_to_json(GVariant *obj);
+char *qobject_to_json_pretty(GVariant *obj);
 
 #endif /* QJSON_H */

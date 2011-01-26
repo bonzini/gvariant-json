@@ -14,18 +14,13 @@
  */
 
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
 #include <assert.h>
 
-#include "qstring.h"
-#include "qint.h"
-#include "qdict.h"
-#include "qlist.h"
-#include "qfloat.h"
-#include "qbool.h"
 #include "json-parser.h"
 #include "json-lexer.h"
 
@@ -44,7 +39,7 @@ typedef struct JSONParserContext
  * 4) deal with premature EOI
  */
 
-static QObject *parse_value(JSONParserContext *ctxt, GQueue *tokens, va_list *ap);
+static GVariant *parse_value(JSONParserContext *ctxt, GQueue *tokens, va_list *ap);
 
 /**
  * Token manipulators
@@ -140,7 +135,7 @@ static int hex2decimal(char ch)
 }
 
 /**
- * parse_string(): Parse a json string and return a QObject
+ * parse_string(): Parse a json string and return a GVariant
  *
  *  string
  *      ""
@@ -162,10 +157,10 @@ static int hex2decimal(char ch)
  *      \t
  *      \u four-hex-digits 
  */
-static QObject *qstring_from_escaped_str(JSONParserContext *ctxt, JSONToken *token)
+static GVariant *g_variant_from_escaped_str(JSONParserContext *ctxt, JSONToken *token)
 {
     const char *ptr = token->str;
-    QObject *qstr = NULL;
+    GVariant *var = NULL;
     GString *str;
     int double_quote = 1;
 
@@ -250,11 +245,11 @@ static QObject *qstring_from_escaped_str(JSONParserContext *ctxt, JSONToken *tok
         }
     }
 
-    qstr = qstring_from_str (str->str);
+    var = g_variant_new_string (str->str);
 
 out:
     g_string_free(str, TRUE);
-    return qstr;
+    return var;
 }
 
 /**
@@ -262,7 +257,7 @@ out:
  */
 static int parse_pair(JSONParserContext *ctxt, GVariantBuilder *builder, GQueue *tokens, va_list *ap)
 {
-    QObject *key, *value;
+    GVariant *key, *value;
     JSONToken *peek;
 
     key = parse_value(ctxt, tokens, ap);
@@ -298,7 +293,7 @@ out:
     return -1;
 }
 
-static QObject *parse_object(JSONParserContext *ctxt, GQueue *tokens, va_list *ap)
+static GVariant *parse_object(JSONParserContext *ctxt, GQueue *tokens, va_list *ap)
 {
     static GVariantType *BOXED_DICTIONARY;
     GVariantBuilder builder;
@@ -343,7 +338,7 @@ out_not_object:
     return NULL;
 }
 
-static QObject *parse_array(JSONParserContext *ctxt, GQueue *tokens, va_list *ap)
+static GVariant *parse_array(JSONParserContext *ctxt, GQueue *tokens, va_list *ap)
 {
     static GVariantType *BOXED_ARRAY;
     GVariantBuilder builder;
@@ -362,7 +357,7 @@ static QObject *parse_array(JSONParserContext *ctxt, GQueue *tokens, va_list *ap
     g_variant_builder_init (&builder, BOXED_ARRAY);
     if (!token_is_operator(peek, ']')) {
         for (;;) {
-	    QObject *obj = parse_value(ctxt, tokens, ap);
+	    GVariant *obj = parse_value(ctxt, tokens, ap);
             if (obj == NULL) {
                 goto out;
             }
@@ -390,9 +385,9 @@ out_not_array:
     return NULL;
 }
 
-static QObject *parse_keyword(JSONParserContext *ctxt, GQueue *tokens)
+static GVariant *parse_keyword(JSONParserContext *ctxt, GQueue *tokens)
 {
-    QObject *ret;
+    GVariant *ret;
     JSONToken *token;
 
     token = g_queue_peek_head(tokens);
@@ -401,9 +396,9 @@ static QObject *parse_keyword(JSONParserContext *ctxt, GQueue *tokens)
     }
 
     if (token_is_keyword(token, "true")) {
-        ret = qbool_from_int(TRUE);
+        ret = g_variant_new_boolean(TRUE);
     } else if (token_is_keyword(token, "false")) {
-        ret = qbool_from_int(FALSE);
+        ret = g_variant_new_boolean(FALSE);
     } else {
         parse_error(ctxt, token, "invalid keyword `%s'", token->str);
         goto out;
@@ -416,9 +411,9 @@ out:
     return NULL;
 }
 
-static QObject *parse_escape(JSONParserContext *ctxt, GQueue *tokens, va_list *ap)
+static GVariant *parse_escape(JSONParserContext *ctxt, GQueue *tokens, va_list *ap)
 {
-    QObject *obj;
+    GVariant *obj;
     JSONToken *token;
 
     if (ap == NULL) {
@@ -427,20 +422,20 @@ static QObject *parse_escape(JSONParserContext *ctxt, GQueue *tokens, va_list *a
 
     token = g_queue_peek_head(tokens);
     if (token_is_escape(token, "%p")) {
-        obj = va_arg(*ap, QObject *);
+        obj = va_arg(*ap, GVariant *);
     } else if (token_is_escape(token, "%i")) {
-        obj = qbool_from_int(va_arg(*ap, int));
+        obj = g_variant_new_boolean(va_arg(*ap, int));
     } else if (token_is_escape(token, "%d")) {
-        obj = qint_from_int(va_arg(*ap, int));
+        obj = g_variant_new_int64(va_arg(*ap, int));
     } else if (token_is_escape(token, "%ld")) {
-        obj = qint_from_int(va_arg(*ap, long));
+        obj = g_variant_new_int64(va_arg(*ap, long));
     } else if (token_is_escape(token, "%lld") ||
                token_is_escape(token, "%I64d")) {
-        obj = qint_from_int(va_arg(*ap, long long));
+        obj = g_variant_new_int64(va_arg(*ap, long long));
     } else if (token_is_escape(token, "%s")) {
-        obj = qstring_from_str(va_arg(*ap, const char *));
+        obj = g_variant_new_string(va_arg(*ap, const char *));
     } else if (token_is_escape(token, "%f")) {
-        obj = qfloat_from_double(va_arg(*ap, double));
+        obj = g_variant_new_double(va_arg(*ap, double));
     } else {
         goto out;
     }
@@ -452,22 +447,22 @@ out:
     return NULL;
 }
 
-static QObject *parse_literal(JSONParserContext *ctxt, GQueue *tokens)
+static GVariant *parse_literal(JSONParserContext *ctxt, GQueue *tokens)
 {
-    QObject *obj;
+    GVariant *obj;
     JSONToken *token;
 
     token = g_queue_peek_head(tokens);
     switch (token->type) {
     case JSON_STRING:
-        obj = qstring_from_escaped_str(ctxt, token);
+        obj = g_variant_from_escaped_str(ctxt, token);
         break;
     case JSON_INTEGER:
-        obj = qint_from_int(strtoll(token->str, NULL, 10));
+        obj = g_variant_new_int64(strtoll(token->str, NULL, 10));
         break;
     case JSON_FLOAT:
         /* FIXME dependent on locale */
-        obj = qfloat_from_double(strtod(token->str, NULL));
+        obj = g_variant_new_double(strtod(token->str, NULL));
         break;
     default:
         goto out;
@@ -480,9 +475,9 @@ out:
     return NULL;
 }
 
-static QObject *parse_value(JSONParserContext *ctxt, GQueue *tokens, va_list *ap)
+static GVariant *parse_value(JSONParserContext *ctxt, GQueue *tokens, va_list *ap)
 {
-    QObject *obj;
+    GVariant *obj;
 
     obj = parse_object(ctxt, tokens, ap);
     if (obj == NULL) {
@@ -501,11 +496,11 @@ static QObject *parse_value(JSONParserContext *ctxt, GQueue *tokens, va_list *ap
     return obj;
 }
 
-QObject *json_parser_parse(GQueue *tokens, va_list *ap)
+GVariant *json_parser_parse(GQueue *tokens, va_list *ap)
 {
     JSONParserContext ctxt = {};
     GQueue *working;
-    QObject *result;
+    GVariant *result;
 
     if (!tokens)
 	return NULL;

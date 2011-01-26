@@ -10,12 +10,8 @@
 #include <glib.h>
 #include <string.h>
 #include <stdlib.h>
-#include "qint.h"
-#include "qfloat.h"
+
 #include "qdict.h"
-#include "qbool.h"
-#include "qstring.h"
-#include "qobject.h"
 
 #if GLIB_MAJOR_VERSION == 2 && GLIB_MINOR_VERSION <= 26
 gboolean

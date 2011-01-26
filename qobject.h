@@ -18,9 +18,4 @@
 #include <assert.h>
 #include <glib.h>
 
-typedef GVariant QObject;
-
-#define qobject_incref(obj)      g_variant_ref(obj)
-#define qobject_decref(obj)      g_variant_unref(obj)
-
 #endif /* QOBJECT_H */

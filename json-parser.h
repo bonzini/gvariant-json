@@ -17,8 +17,7 @@
 #define QEMU_JSON_PARSER_H
 
 #include <glib.h>
-#include <qobject.h>
 
-QObject *json_parser_parse(GQueue *tokens, va_list *ap);
+GVariant *json_parser_parse(GQueue *tokens, va_list *ap);
 
 #endif
