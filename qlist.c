@@ -85,40 +85,6 @@ void qlist_iter(const QList *qlist,
         iter(entry->value, opaque);
 }
 
-QObject *qlist_pop(QList *qlist)
-{
-    QListEntry *entry;
-    QObject *ret;
-
-    if (qlist == NULL || QTAILQ_EMPTY(&qlist->head)) {
-        return NULL;
-    }
-
-    entry = QTAILQ_FIRST(&qlist->head);
-    QTAILQ_REMOVE(&qlist->head, entry, next);
-
-    ret = entry->value;
-    free(entry);
-
-    return ret;
-}
-
-QObject *qlist_peek(QList *qlist)
-{
-    QListEntry *entry;
-    QObject *ret;
-
-    if (qlist == NULL || QTAILQ_EMPTY(&qlist->head)) {
-        return NULL;
-    }
-
-    entry = QTAILQ_FIRST(&qlist->head);
-
-    ret = entry->value;
-
-    return ret;
-}
-
 int qlist_empty(const QList *qlist)
 {
     return QTAILQ_EMPTY(&qlist->head);
