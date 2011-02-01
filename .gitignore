@@ -1,0 +1,8 @@
+/*.o
+/check-json
+/geventfd
+/geventfd-compat
+/ghrtimer
+/ghrtimer-compat
+/gsignalfd
+/gsignalfd-compat
